@@ -1,6 +1,6 @@
 # wp-zendesk-api
 
-A WordPress php library for interacting with the Zendesk API.
+A WordPress php library for interacting with the [Zendesk API](https://developer.zendesk.com/rest_api/docs/core/introduction).
 
 [![Code Climate](https://codeclimate.com/repos/57d2ff981a166e4f0f002da3/badges/b038d80d84f4657a9d10/gpa.svg)](https://codeclimate.com/repos/57d2ff981a166e4f0f002da3/feed)
 [![Test Coverage](https://codeclimate.com/repos/57d2ff981a166e4f0f002da3/badges/b038d80d84f4657a9d10/coverage.svg)](https://codeclimate.com/repos/57d2ff981a166e4f0f002da3/coverage)
