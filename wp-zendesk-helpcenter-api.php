@@ -74,6 +74,8 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 			return json_decode( $body );
 		}
 
+		/* CATEGORIES. */
+
 		/**
 		 * list_categories function.
 		 *
@@ -90,6 +92,72 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 			return $this->fetch( $request );
 
 		}
+
+		public function get_category( $category_id ) {
+
+		}
+
+		public function add_category( $category, $locale = 'en-us' ) {
+
+		}
+
+		public function update_category( $category_id, $locale = 'en-us' ) {
+
+		}
+
+		public function update_category_locale( $category_id ) {
+
+		}
+
+		public function delete_category( $category_id ) {
+
+		}
+
+		/* SECTIONS. */
+
+		public function list_sections( $section_id, $locale = 'en-us' ) {
+
+		}
+
+		public function get_section( $section_id, $locale = 'en-us' ) {
+
+		}
+
+		public function create_section( $section_id, $locale = 'en-us' ) {
+
+		}
+
+		public function update_section( $section_id, $locale = 'en-us' ) {
+
+		}
+
+		public function delete_section( $section_id ) {
+
+		}
+
+		/* ARTICLES. */
+
+		/* ARTICLE COMMENTS. */
+
+		/* ARTICLE LABELS. */
+
+		/* ARTICLE ATTACHMENTS. */
+
+		/* TRANSLATIONS. */
+
+		/* SEARCH. */
+
+		/* TOPICS. */
+
+		/* POSTS. */
+
+		/* POST COMMENTS. */
+
+		/* SUBSCRIPTIONS. */
+
+		/* VOTES. */
+
+		/* ACCESS POLICIES. */
 
 	}
 }
