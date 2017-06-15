@@ -285,12 +285,30 @@ class Zendesk_Wordpress_API {
 
 	// https://developer.zendesk.com/rest_api/docs/core/tickets#delete-ticket
 	public function delete_ticket( $ticket_id ){
+		$result = $this->_delete( 'tickets/' . $ticket_id . '.json' );
 
+		if ( ! is_wp_error( $result ) && ( $result['response']['code'] == 200 || $result['response']['code'] == 201 ) ) {
+      return json_decode( $result['body'] );
+    } else {
+      if ( is_wp_error( $result ) ) {
+        return new WP_Error( 'zendesk-api-error', __( 'Ticket cannot be deleted right now.', 'zendesk' ) );
+      }
+    }
+		return $result;
 	}
 
 	// https://developer.zendesk.com/rest_api/docs/core/tickets#bulk-delete-tickets
 	public function delete_tickets( $ticket_ids ){
+		$result = $this->_delete( 'tickets/destroy_many.json?ids=' . implode( $ticket_ids, ',' ) );
 
+		if ( ! is_wp_error( $result ) && ( $result['response']['code'] == 200 || $result['response']['code'] == 201 ) ) {
+      return json_decode( $result['body'] );
+    } else {
+      if ( is_wp_error( $result ) ) {
+        return new WP_Error( 'zendesk-api-error', __( 'Tickets cannot be deleted right now.', 'zendesk' ) );
+      }
+    }
+		return $result;
 	}
 
 	/* TICKET COMMENTS */
@@ -681,7 +699,43 @@ class Zendesk_Wordpress_API {
         echo $error_string . '<br />';
       }
 
-      Zendesk_Wordpress_Logger::log( $error_string, true );
+			if( class_exists( 'Zendesk_Wordpress_Logger' ) ){
+      	Zendesk_Wordpress_Logger::log( $error_string, true );
+			}
+    }
+
+    return $result;
+  }
+
+	private function _delete( $endpoint, $put_data = null, $extra_headers = array() ) {
+    $put_data = json_encode( $put_data );
+    $headers  = array(
+      'Authorization' => 'Basic ' . base64_encode( $this->username . ':' . $this->password ),
+      'Content-Type'  => 'application/json'
+    );
+    $headers  = array_merge( $headers, $extra_headers );
+
+    $target_url = trailingslashit( $this->api_url ) . $endpoint;
+    $result     = wp_remote_request(
+      $target_url,
+      array(
+        'method'    => 'DELETE',
+        'headers'   => $headers,
+        'body'      => $put_data,
+        'sslverify' => false,
+        'user-agent' => ZENDESK_USER_AGENT,
+      )
+    );
+
+    if ( ( defined( 'WP_DEBUG' ) && WP_DEBUG ) && is_wp_error( $result ) ) {
+      $error_string = 'Zendesk API DELETE Error (' . $target_url . '): ' . $result->get_error_message();
+      if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
+        echo $error_string . '<br />';
+      }
+
+			if( class_exists( 'Zendesk_Wordpress_Logger' ) ){
+      	Zendesk_Wordpress_Logger::log( $error_string, true );
+			}
     }
 
     return $result;
