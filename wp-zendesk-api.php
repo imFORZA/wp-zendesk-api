@@ -1,7 +1,13 @@
 <?php
-/*
- * Zendesk API Class
- *
+ /*
+ * Plugin Name: WP Zendesk API
+ * Plugin URI: https://github.com/wp-api-libraries/wp-zendesk-api
+ * Description: Perform API requests to Zendesk in WordPress.
+ * Author: WP API Libraries
+ * Version: 1.0.0
+ * Author URI: https://wp-api-libraries.com
+ * GitHub Plugin URI: https://github.com/wp-api-libraries/wp-zendesk-api
+ * GitHub Branch: master
  */
 
 /*
@@ -30,8 +36,8 @@ class Zendesk_Wordpress_API {
    * API calls if one doesn't exist.
    *
    */
-  public function __construct( $api_url ) {
-    $this->api_url = $api_url . '/api/v2';
+  public function __construct( $subdomain ) {
+    $this->api_url = 'https://' . $subdomain . '.zendesk.com/api/v2';
 
     if ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) {
       $this->cache_timeout               = 60;
@@ -44,6 +50,10 @@ class Zendesk_Wordpress_API {
       $this->cache_timeout_ticket_fields = 5;
       $this->cache_timeout_user          = 5;
     }
+
+		if(!defined('ZENDESK_USER_AGENT')){
+			define('ZENDESK_USER_AGENT', '');
+		}
   }
 
   /*
@@ -487,7 +497,9 @@ class Zendesk_Wordpress_API {
         echo $error_string . '<br />';
       }
 
-      Zendesk_Wordpress_Logger::log( $error_string, true );
+			if(class_exists( 'Zendesk_Wordpress_Logger' )){
+      	Zendesk_Wordpress_Logger::log( $error_string, true );
+			}
     }
 
     return $result;
