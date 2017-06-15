@@ -128,13 +128,107 @@ class Zendesk_Wordpress_API {
     }
   }
 
-  /*
+	/* SEARCH */
+
+	/**
+	 * Search for Tickets, Users, or Orgs with varying params
+	 * https://developer.zendesk.com/rest_api/docs/core/search
+	 *
+	 * @param  string  $type         		Type to search for {'user', 'ticket', 'organization'}
+	 * @param  string  $status     			Status of object to check
+	 * @return [type]                   [description]
+	 */
+	public function search( $type, $status ){
+
+	}
+
+
+	/* TICKETS */
+
+	// https://developer.zendesk.com/rest_api/docs/core/tickets#list-tickets
+	public function list_tickets(){
+    $result = $this->_get( 'tickets.json' );
+
+    if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
+      return json_decode( $result['body'] );
+    } else {
+      if ( is_wp_error( $result ) ) {
+        return new WP_Error( 'zendesk-api-error', __( 'Tickets cannot be accessed right now.', 'zendesk' ) );
+      }
+    }
+
+    // Serving from cache wait que
+    return $result;
+	}
+
+	// https://developer.zendesk.com/rest_api/docs/core/tickets#show-ticket
+	public function show_ticket( $ticket_id ){
+		$result = $this->_get( 'tickets/' . $ticket_id . '.json' );
+
+		if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
+      return json_decode( $result['body'] );
+    } else {
+      if ( is_wp_error( $result ) ) {
+        return new WP_Error( 'zendesk-api-error', __( 'That ticket cannot be accessed right now.', 'zendesk' ) );
+      }
+    }
+	}
+
+	/*
+   * Get Ticket Fields
+   *
+   * Retrieves the ticket fields, used mostly for custom fields display
+   * in the tickets view widget in the dashboard.
+   *
+   */
+  public function get_ticket_fields() {
+    $transient_key = $this->_salt( 'ticket_fields' );
+
+    if ( false === ( $fields = get_transient( $transient_key ) ) ) {
+      $result = $this->_get( 'ticket_fields.json' );
+
+      if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
+        $fields = json_decode( $result['body'] );
+        $fields = $fields->ticket_fields;
+        set_transient( $transient_key, $fields, $this->cache_timeout_ticket_fields );
+
+        return $fields;
+      } else {
+        if ( is_wp_error( $result ) ) {
+          return new WP_Error( 'zendesk-api-error', __( 'The ticket fields could not be fetched at this time, please try again later.', 'zendesk' ) );
+        }
+      }
+    }
+
+    // Serving from cache
+    return $fields;
+  }
+
+	// https://developer.zendesk.com/rest_api/docs/core/tickets#show-multiple-tickets
+	// Show tickets based on array of IDs. Returns a specific number of tickets.
+	public function show_tickets( $ids ){
+		$result = $this->_get( 'tickets/show_many.json?ids=' . implode($ids, ","));
+
+		if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
+      return json_decode( $result['body'] );
+    } else {
+      if ( is_wp_error( $result ) ) {
+        return new WP_Error( 'zendesk-api-error', __( 'Tickets cannot be accessed right now.', 'zendesk' ) );
+      }
+    }
+
+    // Serving from cache wait que
+    return $result;
+	}
+
+  /**
    * Create Ticket
    *
    * Creates a new ticket given the $subject and $description. The
    * new ticket is authored by the currently set user, i.e. the
    * credentials stored in the private variables of this class.
    *
+   * @return int ID of ticket after submission
    */
   public function create_ticket( $subject, $description, $requester_name = false, $requester_email = false ) {
     $ticket = array(
@@ -157,7 +251,7 @@ class Zendesk_Wordpress_API {
 
     if ( ! is_wp_error( $result ) && $result['response']['code'] == 201 ) {
       $location = $result['headers']['location'];
-      preg_match( '/\.zendesk\.com\/api\/v2\/tickets\/([0-9]+)\.(json)/i', $location, $matches );
+      preg_match( '/\.zendesk\.com\/api\/v2\/tickets\/([0-9]+)\.(json)/i', $location, $matches ); // cute, looks for url of thing created
 
       if ( isset( $matches[1] ) ) {
         return $matches[1];
@@ -169,6 +263,37 @@ class Zendesk_Wordpress_API {
       return new WP_Error( 'zendesk-api-error', __( 'A new ticket could not be created at this time, please try again later.', 'zendesk' ) );
     }
   }
+
+	// https://developer.zendesk.com/rest_api/docs/core/tickets#create-many-tickets
+	public function create_tickets( $ticket_objs ){
+
+	}
+
+	// https://developer.zendesk.com/rest_api/docs/core/tickets#update-ticket
+	public function update_ticket( $ticket_id, $args ){
+		$result = $this->_put( 'tickets/' . $ticket_id . '.json', $args );
+
+		if ( ! is_wp_error( $result ) && ( $result['response']['code'] == 200 || $result['response']['code'] == 201 ) ) {
+      return json_decode( $result['body'] );
+    } else {
+      if ( is_wp_error( $result ) ) {
+        return new WP_Error( 'zendesk-api-error', __( 'Tickets cannot be modified right now.', 'zendesk' ) );
+      }
+    }
+		return $result;
+	}
+
+	// https://developer.zendesk.com/rest_api/docs/core/tickets#delete-ticket
+	public function delete_ticket( $ticket_id ){
+
+	}
+
+	// https://developer.zendesk.com/rest_api/docs/core/tickets#bulk-delete-tickets
+	public function delete_tickets( $ticket_ids ){
+
+	}
+
+	/* TICKET COMMENTS */
 
   /*
    * Create Comment
@@ -221,6 +346,8 @@ class Zendesk_Wordpress_API {
     return $comments;
   }
 
+	/* REQUESTS */
+
   /*
    * Create Request
    *
@@ -251,6 +378,40 @@ class Zendesk_Wordpress_API {
     } else {
       return new WP_Error( 'zendesk-api-error', __( 'A new request could not be created at this time, please try again later.', 'zendesk' ) );
     }
+  }
+
+	// https://developer.zendesk.com/rest_api/docs/core/requests#update-request
+	public function update_request( $request_id ){
+
+	}
+
+	/*
+   * Get Requests
+   *
+   * Similar to the function above but used for end-users to return
+   * all open requests. Returns a WP_Error if requests could not be
+   * fetched. Uses the Transient API for caching results.
+   *
+   */
+  public function get_requests() {
+    $transient_key = $this->_salt( 'requests' );
+
+    if ( false == ( $requests = get_transient( $transient_key ) ) ) {
+      $result = $this->_get( 'requests.json' );
+
+      if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
+        $requests = json_decode( $result['body'] );
+        $requests = $requests->requests;
+        set_transient( $transient_key, $requests, $this->cache_timeout );
+
+        return $requests;
+      } else {
+        return new WP_Error( 'zendesk-api-error', __( 'The requests could not be fetched at this time, please try again later.', 'zendesk' ) );
+      }
+    }
+
+    // Serving from cache
+    return $requests;
   }
 
   /*
@@ -289,65 +450,6 @@ class Zendesk_Wordpress_API {
 
     // Serving from cache
     return $views;
-  }
-
-  /*
-   * Get Ticket Fields
-   *
-   * Retrieves the ticket fields, used mostly for custom fields display
-   * in the tickets view widget in the dashboard.
-   *
-   */
-  public function get_ticket_fields() {
-    $transient_key = $this->_salt( 'ticket_fields' );
-
-    if ( false === ( $fields = get_transient( $transient_key ) ) ) {
-      $result = $this->_get( 'ticket_fields.json' );
-
-      if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
-        $fields = json_decode( $result['body'] );
-        $fields = $fields->ticket_fields;
-        set_transient( $transient_key, $fields, $this->cache_timeout_ticket_fields );
-
-        return $fields;
-      } else {
-        if ( is_wp_error( $result ) ) {
-          return new WP_Error( 'zendesk-api-error', __( 'The ticket fields could not be fetched at this time, please try again later.', 'zendesk' ) );
-        }
-      }
-    }
-
-    // Serving from cache
-    return $fields;
-  }
-
-  /*
-   * Get Requests
-   *
-   * Similar to the function above but used for end-users to return
-   * all open requests. Returns a WP_Error if requests could not be
-   * fetched. Uses the Transient API for caching results.
-   *
-   */
-  public function get_requests() {
-    $transient_key = $this->_salt( 'requests' );
-
-    if ( false == ( $requests = get_transient( $transient_key ) ) ) {
-      $result = $this->_get( 'requests.json' );
-
-      if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
-        $requests = json_decode( $result['body'] );
-        $requests = $requests->requests;
-        set_transient( $transient_key, $requests, $this->cache_timeout );
-
-        return $requests;
-      } else {
-        return new WP_Error( 'zendesk-api-error', __( 'The requests could not be fetched at this time, please try again later.', 'zendesk' ) );
-      }
-    }
-
-    // Serving from cache
-    return $requests;
   }
 
   /*
@@ -537,8 +639,9 @@ class Zendesk_Wordpress_API {
       if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
         echo $error_string . '<br />';
       }
-
-      Zendesk_Wordpress_Logger::log( $error_string, true );
+			if(class_exists('Zendesk_Wordpress_Logger')){
+      	Zendesk_Wordpress_Logger::log( $error_string, true );
+			}
     }
 
     return $result;
