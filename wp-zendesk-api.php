@@ -174,35 +174,6 @@ class Zendesk_Wordpress_API {
     }
 	}
 
-	/*
-   * Get Ticket Fields
-   *
-   * Retrieves the ticket fields, used mostly for custom fields display
-   * in the tickets view widget in the dashboard.
-   *
-   */
-  public function get_ticket_fields() {
-    $transient_key = $this->_salt( 'ticket_fields' );
-
-    if ( false === ( $fields = get_transient( $transient_key ) ) ) {
-      $result = $this->_get( 'ticket_fields.json' );
-
-      if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
-        $fields = json_decode( $result['body'] );
-        $fields = $fields->ticket_fields;
-        set_transient( $transient_key, $fields, $this->cache_timeout_ticket_fields );
-
-        return $fields;
-      } else {
-        if ( is_wp_error( $result ) ) {
-          return new WP_Error( 'zendesk-api-error', __( 'The ticket fields could not be fetched at this time, please try again later.', 'zendesk' ) );
-        }
-      }
-    }
-
-    // Serving from cache
-    return $fields;
-  }
 
 	// https://developer.zendesk.com/rest_api/docs/core/tickets#show-multiple-tickets
 	// Show tickets based on array of IDs. Returns a specific number of tickets.
@@ -311,6 +282,78 @@ class Zendesk_Wordpress_API {
 		return $result;
 	}
 
+  /* REQUESTS */
+
+  /*
+   * Get Requests
+   *
+   * Similar to the function above but used for end-users to return
+   * all open requests. Returns a WP_Error if requests could not be
+   * fetched. Uses the Transient API for caching results.
+   *
+   */
+  public function list_requests() {
+    $transient_key = $this->_salt( 'requests' );
+
+    if ( false == ( $requests = get_transient( $transient_key ) ) ) {
+      $result = $this->_get( 'requests.json' );
+
+      if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
+        $requests = json_decode( $result['body'] );
+        $requests = $requests->requests;
+        set_transient( $transient_key, $requests, $this->cache_timeout );
+
+        return $requests;
+      } else {
+        return new WP_Error( 'zendesk-api-error', __( 'The requests could not be fetched at this time, please try again later.', 'zendesk' ) );
+      }
+    }
+
+    // Serving from cache
+    return $requests;
+  }
+
+  public function show_request( $request_id ){
+
+  }
+
+  /*
+   * Create Request
+   *
+   * Same as the method above, but instead of tickets.json, requests.json
+   * is called. Used to create tickets by non-admin and non-agent users
+   * (based on their role, where 0 is generally end-users).
+   *
+   */
+  public function create_request( $subject, $description ) {
+    $request = array(
+      'request' => array(
+        'subject' => $subject,
+        'comment' => array( 'body' => $description )
+      )
+    );
+
+    $headers = array();
+
+    $result = $this->_post( 'requests.json', $request, $headers );
+
+    /*
+     * @todo: requests.json returns a 406 for end-users instead of
+     * the expected 201. Should probably fix this in future update,
+     * related issue: #23 Temporary fix is to allow 406's.
+     */
+    if ( ! is_wp_error( $result ) && ( $result['response']['code'] == 201 || $result['response']['code'] == 406 ) ) {
+      return true;
+    } else {
+      return new WP_Error( 'zendesk-api-error', __( 'A new request could not be created at this time, please try again later.', 'zendesk' ) );
+    }
+  }
+
+  // https://developer.zendesk.com/rest_api/docs/core/requests#update-request
+  public function update_request( $request_id ){
+
+  }
+
 	/* TICKET COMMENTS */
 
   /*
@@ -349,7 +392,7 @@ class Zendesk_Wordpress_API {
    * not cached.
    *
    */
-  public function get_comments( $ticket_id ) {
+  public function list_comments( $ticket_id ) {
     $result = $this->_get( 'tickets/' . $ticket_id . '/comments.json' );
 
     if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
@@ -362,74 +405,6 @@ class Zendesk_Wordpress_API {
     }
 
     return $comments;
-  }
-
-	/* REQUESTS */
-
-  /*
-   * Create Request
-   *
-   * Same as the method above, but instead of tickets.json, requests.json
-   * is called. Used to create tickets by non-admin and non-agent users
-   * (based on their role, where 0 is generally end-users).
-   *
-   */
-  public function create_request( $subject, $description ) {
-    $request = array(
-      'request' => array(
-        'subject' => $subject,
-        'comment' => array( 'body' => $description )
-      )
-    );
-
-    $headers = array();
-
-    $result = $this->_post( 'requests.json', $request, $headers );
-
-    /*
-     * @todo: requests.json returns a 406 for end-users instead of
-     * the expected 201. Should probably fix this in future update,
-     * related issue: #23 Temporary fix is to allow 406's.
-     */
-    if ( ! is_wp_error( $result ) && ( $result['response']['code'] == 201 || $result['response']['code'] == 406 ) ) {
-      return true;
-    } else {
-      return new WP_Error( 'zendesk-api-error', __( 'A new request could not be created at this time, please try again later.', 'zendesk' ) );
-    }
-  }
-
-	// https://developer.zendesk.com/rest_api/docs/core/requests#update-request
-	public function update_request( $request_id ){
-
-	}
-
-	/*
-   * Get Requests
-   *
-   * Similar to the function above but used for end-users to return
-   * all open requests. Returns a WP_Error if requests could not be
-   * fetched. Uses the Transient API for caching results.
-   *
-   */
-  public function get_requests() {
-    $transient_key = $this->_salt( 'requests' );
-
-    if ( false == ( $requests = get_transient( $transient_key ) ) ) {
-      $result = $this->_get( 'requests.json' );
-
-      if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
-        $requests = json_decode( $result['body'] );
-        $requests = $requests->requests;
-        set_transient( $transient_key, $requests, $this->cache_timeout );
-
-        return $requests;
-      } else {
-        return new WP_Error( 'zendesk-api-error', __( 'The requests could not be fetched at this time, please try again later.', 'zendesk' ) );
-      }
-    }
-
-    // Serving from cache
-    return $requests;
   }
 
   /*
@@ -560,6 +535,12 @@ class Zendesk_Wordpress_API {
     return $request;
   }
 
+  /* USERS */
+
+  public function list_users(){
+
+  }
+
   /*
    * Get User Details
    *
@@ -568,7 +549,7 @@ class Zendesk_Wordpress_API {
    * details. User objects are cached using the Transient API.
    *
    */
-  public function get_user( $user_id ) {
+  public function show_user( $user_id ) {
     $transient_key = $this->_salt( 'user-' . $user_id );
 
     if ( false == ( $user = get_transient( $transient_key ) ) ) {
@@ -587,6 +568,70 @@ class Zendesk_Wordpress_API {
     // Serving from cache
     return $user;
   }
+
+  public function show_users( $user_ids ){
+
+  }
+
+  public function get_user_info( $user_id ){
+
+  }
+
+  public function create_user( $user ){
+
+  }
+
+  public function create_or_update_user( $idk ){
+
+  }
+
+  public function delete_user( $user_id ){
+
+  }
+
+  public function update_user_profile_pic( $idk ){
+
+  }
+
+  public function set_user_password( $user_id, $pass ){
+
+  }
+
+  /* GROUPS */
+
+  /* TICKET FIELDS */
+
+  /*
+   * Get Ticket Fields
+   *
+   * Retrieves the ticket fields, used mostly for custom fields display
+   * in the tickets view widget in the dashboard.
+   *
+   */
+  public function get_ticket_fields() {
+    $transient_key = $this->_salt( 'ticket_fields' );
+
+    if ( false === ( $fields = get_transient( $transient_key ) ) ) {
+      $result = $this->_get( 'ticket_fields.json' );
+
+      if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
+        $fields = json_decode( $result['body'] );
+        $fields = $fields->ticket_fields;
+        set_transient( $transient_key, $fields, $this->cache_timeout_ticket_fields );
+
+        return $fields;
+      } else {
+        if ( is_wp_error( $result ) ) {
+          return new WP_Error( 'zendesk-api-error', __( 'The ticket fields could not be fetched at this time, please try again later.', 'zendesk' ) );
+        }
+      }
+    }
+
+    // Serving from cache
+    return $fields;
+  }
+
+  /* HELPER FUNCTIONS */
 
   /*
    * API GET

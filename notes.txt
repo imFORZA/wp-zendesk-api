@@ -1,0 +1,49 @@
+Total functions should support:
+
+  Tickets:
+    List Tickets
+      Done
+    Show Ticket
+      Done
+    Show Multiple Tickets
+      Done
+    Create Ticket
+      Done
+    Update Ticket
+      Done
+    Delete Ticket
+      Done
+    Bulk Delete Tickets
+      Done
+  Requests:
+    List Requests
+      Done
+    Show Request
+    Create Request
+      Done
+    Update Request
+  Ticket Comments:
+    Create Ticket Comment
+      Done?
+    List Comments
+      Done
+  Users:
+    List Users
+    Show User
+      Done
+    Show Many Users
+    User Related Information
+    Create User
+    Create/Update User
+    Update User
+    Delete User
+    Update a User's Profile Picture
+    Set a User's Password
+  Groups:
+    List Groups
+    Show Group
+    Create Groups
+    Update Groups
+    Delete Group
+  Ticket Fields:
+    Show Ticket Fields
