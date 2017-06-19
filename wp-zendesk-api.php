@@ -101,7 +101,7 @@ class Zendesk_Wordpress_API {
     $this->username = false;
     $this->password = false;
 
-    return new WP_Error( 'zendesk-api-error', __( 'We could not authenticate you with Zendesk, please try again!', 'zendesk' ) );
+    return new WP_Error( 'zendesk-api-error', __( 'We could not authenticate you with Zendesk, please try again!', 'wp-zendesk-api' ) );
   }
 
   /*
@@ -153,7 +153,7 @@ class Zendesk_Wordpress_API {
       return json_decode( $result['body'] );
     } else {
       if ( is_wp_error( $result ) ) {
-        return new WP_Error( 'zendesk-api-error', __( 'Tickets cannot be accessed right now.', 'zendesk' ) );
+        return new WP_Error( 'zendesk-api-error', __( 'Tickets cannot be accessed right now.', 'wp-zendesk-api' ) );
       }
     }
 
@@ -169,7 +169,7 @@ class Zendesk_Wordpress_API {
       return json_decode( $result['body'] );
     } else {
       if ( is_wp_error( $result ) ) {
-        return new WP_Error( 'zendesk-api-error', __( 'That ticket cannot be accessed right now.', 'zendesk' ) );
+        return new WP_Error( 'zendesk-api-error', __( 'That ticket cannot be accessed right now.', 'wp-zendesk-api' ) );
       }
     }
 	}
@@ -184,7 +184,7 @@ class Zendesk_Wordpress_API {
       return json_decode( $result['body'] );
     } else {
       if ( is_wp_error( $result ) ) {
-        return new WP_Error( 'zendesk-api-error', __( 'Tickets cannot be accessed right now.', 'zendesk' ) );
+        return new WP_Error( 'zendesk-api-error', __( 'Tickets cannot be accessed right now.', 'wp-zendesk-api' ) );
       }
     }
 
@@ -226,13 +226,10 @@ class Zendesk_Wordpress_API {
 
       if ( isset( $matches[1] ) ) {
         return $matches[1];
-      } else {
-        return new WP_Error( 'zendesk-api-error', __( 'A new ticket could not be created at this time, please try again later.', 'zendesk' ) );
       }
-
-    } else {
-      return new WP_Error( 'zendesk-api-error', __( 'A new ticket could not be created at this time, please try again later.', 'zendesk' ) );
     }
+    return new WP_Error( 'zendesk-api-error', __( 'A new ticket could not be created at this time, please try again later.', 'wp-zendesk-api' ) );
+
   }
 
 	// https://developer.zendesk.com/rest_api/docs/core/tickets#create-many-tickets
@@ -248,7 +245,7 @@ class Zendesk_Wordpress_API {
       return json_decode( $result['body'] );
     } else {
       if ( is_wp_error( $result ) ) {
-        return new WP_Error( 'zendesk-api-error', __( 'Tickets cannot be modified right now.', 'zendesk' ) );
+        return new WP_Error( 'zendesk-api-error', __( 'Tickets cannot be modified right now.', 'wp-zendesk-api' ) );
       }
     }
 		return $result;
@@ -262,7 +259,7 @@ class Zendesk_Wordpress_API {
       return json_decode( $result['body'] );
     } else {
       if ( is_wp_error( $result ) ) {
-        return new WP_Error( 'zendesk-api-error', __( 'Ticket cannot be deleted right now.', 'zendesk' ) );
+        return new WP_Error( 'zendesk-api-error', __( 'Ticket cannot be deleted right now.', 'wp-zendesk-api' ) );
       }
     }
 		return $result;
@@ -276,7 +273,7 @@ class Zendesk_Wordpress_API {
       return json_decode( $result['body'] );
     } else {
       if ( is_wp_error( $result ) ) {
-        return new WP_Error( 'zendesk-api-error', __( 'Tickets cannot be deleted right now.', 'zendesk' ) );
+        return new WP_Error( 'zendesk-api-error', __( 'Tickets cannot be deleted right now.', 'wp-zendesk-api' ) );
       }
     }
 		return $result;
@@ -305,7 +302,7 @@ class Zendesk_Wordpress_API {
 
         return $requests;
       } else {
-        return new WP_Error( 'zendesk-api-error', __( 'The requests could not be fetched at this time, please try again later.', 'zendesk' ) );
+        return new WP_Error( 'zendesk-api-error', __( 'The requests could not be fetched at this time, please try again later.', 'wp-zendesk-api' ) );
       }
     }
 
@@ -314,7 +311,17 @@ class Zendesk_Wordpress_API {
   }
 
   public function show_request( $request_id ){
+    $result = $this->_get( 'requests/' . $request_id . '.json' );
 
+		if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
+      return json_decode( $result['body'] );
+    } else {
+      if ( is_wp_error( $result ) ) {
+        return new WP_Error( 'zendesk-api-error', __( 'Request cannot be accessed right now.', 'wp-zendesk-api' ) );
+      }
+    }
+
+    return $result;
   }
 
   /*
@@ -343,14 +350,35 @@ class Zendesk_Wordpress_API {
      * related issue: #23 Temporary fix is to allow 406's.
      */
     if ( ! is_wp_error( $result ) && ( $result['response']['code'] == 201 || $result['response']['code'] == 406 ) ) {
-      return true;
+      return $request;
     } else {
-      return new WP_Error( 'zendesk-api-error', __( 'A new request could not be created at this time, please try again later.', 'zendesk' ) );
+      return new WP_Error( 'zendesk-api-error', __( 'A new request could not be created at this time, please try again later.', 'wp-zendesk-api' ) );
     }
   }
 
   // https://developer.zendesk.com/rest_api/docs/core/requests#update-request
-  public function update_request( $request_id ){
+  // Used to add a comment to a request. Can also update the solved status
+  // Hmmm, status doesn't appear to work. Weird.
+  public function update_request( $request_id, $comment, $status = '' ){
+    $request = array(
+      'request' => array(
+        'comment' => array(
+          'body' => $comment
+        )
+      )
+    );
+
+    if( $status != '' ){
+      $request['request']['status'] = $status;
+    }
+
+    $result = $this->_put( 'requests/' . $request_id . '.json', $request );
+
+    if ( ! is_wp_error( $result ) && ( $result['response']['code'] == 200 || $result['response']['code'] == 406 ) ) {
+      return $request;
+    } else {
+      return new WP_Error( 'zendesk-api-error', __( 'A comment could not be added to this request at this time, please try again later.', 'wp-zendesk-api' ) );
+    }
 
   }
 
@@ -379,7 +407,7 @@ class Zendesk_Wordpress_API {
     if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
       return true;
     } else {
-      return new WP_Error( 'zendesk-api-error', __( 'A new comment could not be created at this time, please try again later.', 'zendesk' ) );
+      return new WP_Error( 'zendesk-api-error', __( 'A new comment could not be created at this time, please try again later.', 'wp-zendesk-api' ) );
     }
   }
 
@@ -401,7 +429,7 @@ class Zendesk_Wordpress_API {
 
       return $comments;
     } else {
-      return new WP_Error( 'zendesk-api-error', __( 'Could not fetch the comments at this time, please try again later.', 'zendesk' ), array( 'status' => $result['response']['code'] ) );
+      return new WP_Error( 'zendesk-api-error', __( 'Could not fetch the comments at this time, please try again later.', 'wp-zendesk-api' ), array( 'status' => $result['response']['code'] ) );
     }
 
     return $comments;
@@ -434,9 +462,9 @@ class Zendesk_Wordpress_API {
       } else {
 
         if ( is_wp_error( $result ) ) {
-          return new WP_Error( 'zendesk-api-error', __( 'The active views could not be fetched at this time, please try again later.', 'zendesk' ) );
+          return new WP_Error( 'zendesk-api-error', __( 'The active views could not be fetched at this time, please try again later.', 'wp-zendesk-api' ) );
         } elseif ( $result['response']['code'] == 403 ) {
-          return new WP_Error( 'zendesk-api-error', __( 'Access denied You do not have access to this view.', 'zendesk' ) );
+          return new WP_Error( 'zendesk-api-error', __( 'Access denied You do not have access to this view.', 'wp-zendesk-api' ) );
         }
       }
     }
@@ -468,7 +496,7 @@ class Zendesk_Wordpress_API {
 
         return $tickets;
       } else {
-        return new WP_Error( 'zendesk-api-error', __( 'The tickets for this view could not be fetched at this time, please try again later.', 'zendesk' ) );
+        return new WP_Error( 'zendesk-api-error', __( 'The tickets for this view could not be fetched at this time, please try again later.', 'wp-zendesk-api' ) );
       }
     }
 
@@ -498,7 +526,7 @@ class Zendesk_Wordpress_API {
 
         return $ticket;
       } else {
-        return new WP_Error( 'zendesk-api-error', __( 'Could not fetch the ticket at this time, please try again later.', 'zendesk' ) );
+        return new WP_Error( 'zendesk-api-error', __( 'Could not fetch the ticket at this time, please try again later.', 'wp-zendesk-api' ) );
       }
     }
 
@@ -527,7 +555,7 @@ class Zendesk_Wordpress_API {
 
         return $request;
       } else {
-        return new WP_Error( 'zendesk-api-error', __( 'Could not fetch the request at this time, please try again later.', 'zendesk' ) );
+        return new WP_Error( 'zendesk-api-error', __( 'Could not fetch the request at this time, please try again later.', 'wp-zendesk-api' ) );
       }
     }
 
@@ -561,7 +589,7 @@ class Zendesk_Wordpress_API {
 
         return $user;
       } else {
-        return new WP_Error( 'zendesk-api-error', __( 'The requested user details could not be fetched at this time, please try again later.', 'zendesk' ) );
+        return new WP_Error( 'zendesk-api-error', __( 'The requested user details could not be fetched at this time, please try again later.', 'wp-zendesk-api' ) );
       }
     }
 
@@ -599,7 +627,28 @@ class Zendesk_Wordpress_API {
 
   /* GROUPS */
 
+
   /* TICKET FIELDS */
+
+  public function list_groups(){
+
+  }
+
+  public function show_group( $group_id ){
+
+  }
+
+  public function create_groups( $stuff ){
+
+  }
+
+  public function update_groups( $stuff ){
+
+  }
+
+  public function delete_group( $group_id ){
+
+  }
 
   /*
    * Get Ticket Fields
@@ -622,7 +671,7 @@ class Zendesk_Wordpress_API {
         return $fields;
       } else {
         if ( is_wp_error( $result ) ) {
-          return new WP_Error( 'zendesk-api-error', __( 'The ticket fields could not be fetched at this time, please try again later.', 'zendesk' ) );
+          return new WP_Error( 'zendesk-api-error', __( 'The ticket fields could not be fetched at this time, please try again later.', 'wp-zendesk-api' ) );
         }
       }
     }

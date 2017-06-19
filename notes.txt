@@ -19,9 +19,11 @@ Total functions should support:
     List Requests
       Done
     Show Request
+      Done
     Create Request
       Done
     Update Request
+      Done
   Ticket Comments:
     Create Ticket Comment
       Done?
