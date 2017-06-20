@@ -157,7 +157,6 @@ class Zendesk_Wordpress_API {
       }
     }
 
-    // Serving from cache wait que
     return $result;
 	}
 
@@ -188,7 +187,6 @@ class Zendesk_Wordpress_API {
       }
     }
 
-    // Serving from cache wait que
     return $result;
 	}
 
@@ -565,8 +563,26 @@ class Zendesk_Wordpress_API {
 
   /* USERS */
 
-  public function list_users(){
+  public function list_users( $id = '', $is_group = true){
+    $result;
+    if( $id != '' ) {
+      if( $is_group ) {
+        $result = $this->_get( 'groups/' . $id . '/users.json' );
+      }else{
+        $result = $this->_get( 'organizations/' . $id . '/users.json' );
+      }
+    }else{
+      $result = $this->_get( 'users.json' );
+    }
 
+    if ( ! is_wp_error( $result ) && ( $result['response']['code'] == 200 || $result['response']['code'] == 201 ) ) {
+      return json_decode( $result['body'] );
+    } else {
+      if ( is_wp_error( $result ) ) {
+        return new WP_Error( 'zendesk-api-error', __( 'Users cannot be accessed right now.', 'wp-zendesk-api' ) );
+      }
+    }
+		return $result;
   }
 
   /*
@@ -598,15 +614,47 @@ class Zendesk_Wordpress_API {
   }
 
   public function show_users( $user_ids ){
+    $result = $this->_get( 'users/show_many.json?ids=' . implode($user_ids, ","));
 
+		if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
+      return json_decode( $result['body'] );
+    } else {
+      if ( is_wp_error( $result ) ) {
+        return new WP_Error( 'zendesk-api-error', __( 'Tickets cannot be accessed right now.', 'wp-zendesk-api' ) );
+      }
+    }
+
+    return $result;
   }
 
+  // Get information about a user
   public function get_user_info( $user_id ){
+    $result = $this->_get( 'users/' . $user_id . '/related.json' );
 
+    if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
+      return json_decode( $result['body'] );
+    } else {
+      if ( is_wp_error( $result ) ) {
+        return new WP_Error( 'zendesk-api-error', __( 'Tickets cannot be accessed right now.', 'wp-zendesk-api' ) );
+      }
+    }
+
+    return $result;
   }
 
+  // https://developer.zendesk.com/rest_api/docs/core/users#create-user
   public function create_user( $user ){
+    $result = $this->_post( 'users.json', $user );
 
+    if ( ! is_wp_error( $result ) && ($result['response']['code'] == 200 || $result['response']['code'] == 201) ) {
+      return json_decode( $result['body'] );
+    } else {
+      if ( is_wp_error( $result ) ) {
+        return new WP_Error( 'zendesk-api-error', __( 'Tickets cannot be accessed right now.', 'wp-zendesk-api' ) );
+      }
+    }
+
+    return $result;
   }
 
   public function create_or_update_user( $idk ){
@@ -631,15 +679,30 @@ class Zendesk_Wordpress_API {
   /* TICKET FIELDS */
 
   public function list_groups(){
+    $result = $this->_get( 'groups.json' );
 
+
+    if ( ! is_wp_error( $result ) && ( $result['response']['code'] == 200 || $result['response']['code'] == 201 ) ) {
+      return json_decode( $result['body'] );
+    } else {
+      if ( is_wp_error( $result ) ) {
+        return new WP_Error( 'zendesk-api-error', __( 'Users cannot be accessed right now.', 'wp-zendesk-api' ) );
+      }
+    }
+		return $result;
   }
 
   public function show_group( $group_id ){
+    $result = $this->_get( 'groups/' . $user_id . '.json' );
 
-  }
+    if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
+      $user = json_decode( $result['body'] );
+      set_transient( $transient_key, $user, $this->cache_timeout_user );
 
-  public function create_groups( $stuff ){
-
+      return $user;
+    } else {
+      return new WP_Error( 'zendesk-api-error', __( 'The requested user details could not be fetched at this time, please try again later.', 'wp-zendesk-api' ) );
+    }
   }
 
   public function update_groups( $stuff ){

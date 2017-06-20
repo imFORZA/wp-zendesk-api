@@ -31,11 +31,15 @@ Total functions should support:
       Done
   Users:
     List Users
+      Done
     Show User
       Done
     Show Many Users
+      Done
     User Related Information
+      Done
     Create User
+      Done
     Create/Update User
     Update User
     Delete User
@@ -43,8 +47,9 @@ Total functions should support:
     Set a User's Password
   Groups:
     List Groups
+      Done
     Show Group
-    Create Groups
+      Done
     Update Groups
     Delete Group
   Ticket Fields:
