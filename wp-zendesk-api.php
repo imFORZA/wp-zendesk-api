@@ -196,6 +196,8 @@ class Zendesk_Wordpress_API {
 
     $result = $this->_post( 'tickets.json', $ticket );
 
+
+
     if ( ! is_wp_error( $result ) && $result['response']['code'] == 201 ) {
       $location = $result['headers']['location'];
       preg_match( '/\.zendesk\.com\/api\/v2\/tickets\/([0-9]+)\.(json)/i', $location, $matches ); // cute, looks for url of thing created
@@ -500,16 +502,19 @@ class Zendesk_Wordpress_API {
 
   /* USERS */
 
-  public function list_users( $id = '', $is_group = true){
+  public function list_users( $id = '', $is_group = true, $page = ''){
     $result;
+		if( $page != '' ){
+			$page = '?page=' . $page;
+		}
     if( $id != '' ) {
       if( $is_group ) {
-        $result = $this->_get( 'groups/' . $id . '/users.json' );
+        $result = $this->_get( 'groups/' . $id . '/users.json' . $page );
       }else{
-        $result = $this->_get( 'organizations/' . $id . '/users.json' );
+        $result = $this->_get( 'organizations/' . $id . '/users.json' . $page );
       }
     }else{
-      $result = $this->_get( 'users.json' );
+      $result = $this->_get( 'users.json' . $page );
     }
 
     return $this->checker( $result, __( 'Users cannot be accessed right now.', 'wp-zendesk-api' ) );
