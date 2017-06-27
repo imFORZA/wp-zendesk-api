@@ -298,7 +298,7 @@ class Zendesk_Wordpress_API {
      * the expected 201. Should probably fix this in future update,
      * related issue: #23 Temporary fix is to allow 406's.
      */
-
+		return $result;
     return $this->checker( $result, __( 'A new request could not be created at this time, please try again later.', 'wp-zendesk-api' ), true );
   }
 
@@ -573,7 +573,9 @@ class Zendesk_Wordpress_API {
   }
 
   public function delete_user( $user_id ){
+    $result = $this->_delete( "users/$user_id.json");
 
+		return $result;
   }
 
   public function update_user_profile_pic( $idk ){
@@ -581,7 +583,9 @@ class Zendesk_Wordpress_API {
   }
 
   public function set_user_password( $user_id, $pass ){
+		$result = $this->_post( 'users/' . $user_id . '/password.json', array( 'password' => $pass ) );
 
+		return $this->checker( $result, __( 'Password cannot be set right now.', 'wp-zendesk-api' ) );
   }
 
   /* GROUPS */
