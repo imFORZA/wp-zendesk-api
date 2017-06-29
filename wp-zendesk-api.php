@@ -28,6 +28,8 @@ class Zendesk_Wordpress_API {
   private $username = false;
   private $password = false;
 
+	private $api_key = false;
+
   /*
    * Constructor
    *
@@ -72,6 +74,8 @@ class Zendesk_Wordpress_API {
     $this->username = $username;
     $this->password = $password;
 
+		$this->api_key = false;
+
     if ( $validate ) {
       $result = $this->_get( 'users/me.json' );
       if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
@@ -92,12 +96,17 @@ class Zendesk_Wordpress_API {
     }
   }
 
+	public function authenticate_api( $api_key ){
+
+	}
+
   /*
    * Authentication Helper
    * set username and password to false
    * return new WP_Error
    */
   private function auth_error() {
+		error_log("auth error");
     $this->username = false;
     $this->password = false;
 
@@ -267,8 +276,8 @@ class Zendesk_Wordpress_API {
     return $requests;
   }
 
-  public function show_request( $request_id ){
-    $result = $this->_get( 'requests/' . $request_id . '.json' );
+  public function show_request( $request_id, $altauth = false){
+    $result = $this->_get( 'requests/' . $request_id . '.json', array(), $altauth );
 
     return $this->checker( $result, __( 'Request cannot be accessed right now.', 'wp-zendesk-api' ), true );
   }
@@ -322,6 +331,16 @@ class Zendesk_Wordpress_API {
 
     return $this->checker( $result, __( 'A comment could not be added to this request at this time, please try again later.', 'wp-zendesk-api' ), true );
   }
+
+	public function get_requests_by_user( $email, $altauth = false){
+		$result = $this->_get( 'requests/search.json?query=' . urlencode( 'requester:' . $email ) , array(), $altauth );
+		// error_log('requests/search.json?query=' . urlencode( 'requester:' . $email ));
+
+		// error_log(print_r( $result, true ));
+		// return array();
+		// return $result;
+		return $this->checker( $result, __( 'Requests for this user could not be queried at this time, please try again later.', 'wp-zendesk-api' ) );
+	}
 
 	/* TICKET COMMENTS */
 
@@ -528,11 +547,11 @@ class Zendesk_Wordpress_API {
    * details. User objects are cached using the Transient API.
    *
    */
-  public function show_user( $user_id ) {
+  public function show_user( $user_id, $altauth = false ) {
     $transient_key = $this->_salt( 'user-' . $user_id );
 
     if ( false == ( $user = get_transient( $transient_key ) ) ) {
-      $result = $this->_get( 'users/' . $user_id . '.json' );
+      $result = $this->_get( 'users/' . $user_id . '.json', $altauth );
 
       if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
         $user = json_decode( $result['body'] );
@@ -648,6 +667,8 @@ class Zendesk_Wordpress_API {
 
   /* HELPER FUNCTIONS */
 
+	private $n = 0;
+
   /*
    * API GET
    *
@@ -656,12 +677,25 @@ class Zendesk_Wordpress_API {
    * header and fires a new wp_remote_get request each time.
    *
    */
-  private function _get( $endpoint, $extra_headers = array() ) {
-    $headers    = array(
-      'Authorization' => 'Basic ' . base64_encode( $this->username . ':' . $this->password ),
-      'Content-Type'  => 'application/json',
-    );
+  private function _get( $endpoint, $extra_headers = array(), $altauth = false ) {
+		$headers;
+		if( ! $this->api_key ){
+	    $headers    = array(
+	      'Authorization' => 'Basic ' . ( $altauth != false ? base64_encode($altauth) : base64_encode( $this->username . ':' . $this->password ) ), //'',// .
+	      'Content-Type'  => 'application/json',
+	    );
+		}
+
+		if( $this->n == 2 ){
+			error_log("(auth, user, pass):($altauth, $this->username, $this->password)");
+		}
+
+		error_log("$this->n: " . $headers['Authorization']);
+
+		// error_log("headers: " . print_r( $headers, true ));
     $target_url = trailingslashit( $this->api_url ) . $endpoint;
+
+		error_log("$this->n:  url is: " . $target_url);
     $result     = wp_remote_get(
       $target_url,
       array(
@@ -670,6 +704,7 @@ class Zendesk_Wordpress_API {
         'user-agent' => ZENDESK_USER_AGENT,
       )
     );
+		$this->n++;
 
     if ( ( defined( 'WP_DEBUG' ) && WP_DEBUG ) && is_wp_error( $result ) ) {
       $error_string = 'Zendesk API GET Error (' . $target_url . '): ' . $result->get_error_message();
