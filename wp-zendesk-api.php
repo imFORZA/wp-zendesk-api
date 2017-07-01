@@ -160,8 +160,20 @@ class Zendesk_Wordpress_API {
 	/* TICKETS */
 
 	// https://developer.zendesk.com/rest_api/docs/core/tickets#list-tickets
-	public function list_tickets(){
-    $result = $this->_get( 'tickets.json' );
+	public function list_tickets( $per_page = 100, $page = 1 ){
+    $request = 'tickets.json';
+
+    if( $per_page != 100 ){
+      $request .= '?per_page='.$per_page;
+
+      if( $page != 1 ){
+        $request .= '&page='.$page;
+      }
+    }else if( $page != 1 ){
+      $request .= '?page='.$page;
+    }
+
+    $result = $this->_get( $request );
 
     return $this->checker( $result, __( 'Tickets cannot be accessed right now.', 'wp-zendesk-api' ) );
 	}
