@@ -38,7 +38,7 @@ class Zendesk_Wordpress_API {
    * API calls if one doesn't exist.
    *
    */
-  public function __construct( $subdomain ) {
+  public function __construct( $subdomain, $email = '', $api_key = '' ) {
     $this->api_url = 'https://' . $subdomain . '.zendesk.com/api/v2';
 
     if ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) {
@@ -51,6 +51,11 @@ class Zendesk_Wordpress_API {
       $this->cache_timeout_views         = 5;
       $this->cache_timeout_ticket_fields = 5;
       $this->cache_timeout_user          = 5;
+    }
+
+    if( $email != '' && $api_key != '' ){
+      $this->username = $email;
+      $this->api_key = $api_key;
     }
 
 		if(!defined('ZENDESK_USER_AGENT')){
@@ -671,7 +676,6 @@ class Zendesk_Wordpress_API {
 
   /* HELPER FUNCTIONS */
 
-	private $n = 0;
 
   /*
    * API GET
@@ -690,16 +694,13 @@ class Zendesk_Wordpress_API {
 	    );
 		}
 
-		if( $this->n == 2 ){
-			error_log("(auth, user, pass):($altauth, $this->username, $this->password)");
-		}
-
-		error_log("$this->n: " . $headers['Authorization']);
+    if( $this->api_key != false ){
+      $headers['Authorization'] = 'Basic ' . base64_encode( $this->username . '/token:' . $this->api_key );
+    }
 
 		// error_log("headers: " . print_r( $headers, true ));
     $target_url = trailingslashit( $this->api_url ) . $endpoint;
 
-		error_log("$this->n:  url is: " . $target_url);
     $result     = wp_remote_get(
       $target_url,
       array(
@@ -708,7 +709,6 @@ class Zendesk_Wordpress_API {
         'user-agent' => ZENDESK_USER_AGENT,
       )
     );
-		$this->n++;
 
     if ( ( defined( 'WP_DEBUG' ) && WP_DEBUG ) && is_wp_error( $result ) ) {
       $error_string = 'Zendesk API GET Error (' . $target_url . '): ' . $result->get_error_message();
