@@ -111,7 +111,6 @@ class Zendesk_Wordpress_API {
    * return new WP_Error
    */
   private function auth_error() {
-		error_log("auth error");
     $this->username = false;
     $this->password = false;
 
@@ -351,11 +350,7 @@ class Zendesk_Wordpress_API {
 
 	public function get_requests_by_user( $email, $altauth = false){
 		$result = $this->_get( 'requests/search.json?query=' . urlencode( 'requester:' . $email ) , array(), $altauth );
-		// error_log('requests/search.json?query=' . urlencode( 'requester:' . $email ));
 
-		// error_log(print_r( $result, true ));
-		// return array();
-		// return $result;
 		return $this->checker( $result, __( 'Requests for this user could not be queried at this time, please try again later.', 'wp-zendesk-api' ) );
 	}
 
@@ -565,23 +560,15 @@ class Zendesk_Wordpress_API {
    *
    */
   public function show_user( $user_id, $altauth = false ) {
-    $transient_key = $this->_salt( 'user-' . $user_id );
+    $result = $this->_get( 'users/' . $user_id . '.json', array(), $altauth );
 
-    if ( false == ( $user = get_transient( $transient_key ) ) ) {
-      $result = $this->_get( 'users/' . $user_id . '.json', $altauth );
-
-      if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
-        $user = json_decode( $result['body'] );
-        set_transient( $transient_key, $user, $this->cache_timeout_user );
-
-        return $user;
-      } else {
-        return new WP_Error( 'zendesk-api-error', __( 'The requested user details could not be fetched at this time, please try again later.', 'wp-zendesk-api' ) );
-      }
+    if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
+      $user = json_decode( $result['body'] );
+      return $user;
+    } else {
+      return $result;
+      return new WP_Error( 'zendesk-api-error', __( 'The requested user details could not be fetched at this time, please try again later.', 'wp-zendesk-api' ) );
     }
-
-    // Serving from cache
-    return $user;
   }
 
   public function show_users( $user_ids ){
