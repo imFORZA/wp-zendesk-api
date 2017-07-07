@@ -66,7 +66,7 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 			$code = wp_remote_retrieve_response_code( $response );
 
 			if ( 200 !== $code ) {
-				return new WP_Error( 'response-error', sprintf( __( 'Server response code: %d', 'text-domain' ), $code ) );
+				return new WP_Error( 'response-error', sprintf( __( 'Server response code: %d', 'wp-zendesk-helpcenter-api' ), $code ) );
 			}
 
 			$body = wp_remote_retrieve_body( $response );
@@ -138,6 +138,11 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 		/* ARTICLES. */
 
 		public function get_articles( $locale = 'en-us' ) {
+
+			$request = $this->base_uri . '/api/v2/help_center/'. $locale .'/articles.json';
+
+			return $this->fetch( $request );
+
 
 		}
 
