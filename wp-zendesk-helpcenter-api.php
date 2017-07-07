@@ -389,9 +389,117 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 
 		/* VOTES. */
 
+		public function get_user_votes( $user_id ) {
+
+		}
+
+		public function get_article_votes( $article_id, $locale = 'en-us', $include = '' ) {
+
+		}
+
+		public function get_article_comment_votes( $article_id, $comment_id, $locale = 'en-us', $include = '' ) {
+
+		}
+
+		public function get_posts_votes( $post_id, $include = '' ) {
+
+		}
+
+		public function get_post_comment_votes( $post_id, $comment_id, $include = '' ) {
+
+		}
+
+		public function get_vote( $vote_id, $include = '' ) {
+
+		}
+
+		public function delete_vote( $vote_id ) {
+
+		}
+
+		public function add_article_vote_up( $article_id ) {
+
+		}
+
+		public function add_article_vote_down( $article_id ) {
+
+		}
+
+		public function add_article_comments_vote_up( $article_id, $comment_id ) {
+
+		}
+
+		public function add_article_comments_vote_down( $article_id, $comment_id ) {
+
+		}
+
+		public function add_post_vote_up( $post_id ) {
+
+		}
+
+		public function add_post_vote_down( $post_id ) {
+
+		}
+
+		public function add_post_comments_vote_up( $post_id, $comment_id ) {
+
+		}
+
+		public function add_post_comments_vote_down( $post_id, $comment_id ) {
+
+		}
+
 		/* ACCESS POLICIES. */
 
+		public function get_section_access_policy( $section_id ) {
+
+		}
+
+		public function get_topic_access_policy( $topic_id ) {
+
+		}
+
+		public function update_section_access_policy( $section_id ) {
+
+		}
+
+		public function update_topic_access_policy( $topic_id ) {
+
+		}
+
 		/* USER SEGMENTS. */
+
+		public function get_user_segments() {
+
+		}
+
+		public function get_user_segments_applicable() {
+
+		}
+
+		public function get_user_segment( $user_segment_id ) {
+
+		}
+
+		public function get_sections_with_user_segment( $user_segment_id ) {
+
+		}
+
+		public function get_topics_with_user_segment( $user_segment_id ) {
+
+		}
+
+		public function add_user_segments() {
+
+		}
+
+		public function update_user_segment( $user_segment_id ) {
+
+		}
+
+		public function delete_user_segment( $user_segment_id ) {
+
+		}
 
 	}
 }
