@@ -30,13 +30,6 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 		 */
 		static private $api_key;
 
-		/**
-		 * URL to the API.
-		 *
-		 * @var string
-		 */
-		private $base_uri = 'https://' . static::$install_name . '.zendesk.com';
-
 
 		/**
 		 * __construct function.
@@ -66,7 +59,7 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 			$code = wp_remote_retrieve_response_code( $response );
 
 			if ( 200 !== $code ) {
-				return new WP_Error( 'response-error', sprintf( __( 'Server response code: %d', 'text-domain' ), $code ) );
+				return new WP_Error( 'response-error', sprintf( __( 'Server response code: %d', 'wp-zendesk-helpcenter-api' ), $code ) );
 			}
 
 			$body = wp_remote_retrieve_body( $response );
@@ -87,7 +80,7 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 		 */
 		public function list_categories( $locale = '', $sort_by = '', $sort_order = '' ) {
 
-			$request = $this->base_uri . '/api/v2/help_center/' . $locale . '/categories.json';
+			$request = 'https://' . static::$install_name . '.zendesk.com/api/v2/help_center/' . $locale . '/categories.json';
 
 			return $this->fetch( $request );
 
@@ -138,6 +131,11 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 		/* ARTICLES. */
 
 		public function get_articles( $locale = 'en-us' ) {
+
+			$request = 'https://' . static::$install_name . '.zendesk.com/api/v2/help_center/' . $locale . '/articles.json';
+
+			return $this->fetch( $request );
+
 
 		}
 
@@ -270,7 +268,7 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 
 		}
 
-		public function get_topic_posts( $user_id, $filter_by = '', $sort_by = '', $include = '' ) {
+		public function get_topic_post( $user_id, $filter_by = '', $sort_by = '', $include = '' ) {
 
 		}
 
@@ -304,15 +302,15 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 
 		}
 
-		public function add_comment( $post_id ) {
+		public function add_comments( $post_id ) {
 
 		}
 
-		public function update_comment( $post_id, $comment_id ) {
+		public function update_comments( $post_id, $comment_id ) {
 
 		}
 
-		public function delete_comment( $post_id, $comment_id ) {
+		public function delete_comments( $post_id, $comment_id ) {
 
 		}
 
@@ -389,9 +387,117 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 
 		/* VOTES. */
 
+		public function get_user_votes( $user_id ) {
+
+		}
+
+		public function get_article_votes( $article_id, $locale = 'en-us', $include = '' ) {
+
+		}
+
+		public function get_article_comment_votes( $article_id, $comment_id, $locale = 'en-us', $include = '' ) {
+
+		}
+
+		public function get_posts_votes( $post_id, $include = '' ) {
+
+		}
+
+		public function get_post_comment_votes( $post_id, $comment_id, $include = '' ) {
+
+		}
+
+		public function get_vote( $vote_id, $include = '' ) {
+
+		}
+
+		public function delete_vote( $vote_id ) {
+
+		}
+
+		public function add_article_vote_up( $article_id ) {
+
+		}
+
+		public function add_article_vote_down( $article_id ) {
+
+		}
+
+		public function add_article_comments_vote_up( $article_id, $comment_id ) {
+
+		}
+
+		public function add_article_comments_vote_down( $article_id, $comment_id ) {
+
+		}
+
+		public function add_post_vote_up( $post_id ) {
+
+		}
+
+		public function add_post_vote_down( $post_id ) {
+
+		}
+
+		public function add_post_comments_vote_up( $post_id, $comment_id ) {
+
+		}
+
+		public function add_post_comments_vote_down( $post_id, $comment_id ) {
+
+		}
+
 		/* ACCESS POLICIES. */
 
+		public function get_section_access_policy( $section_id ) {
+
+		}
+
+		public function get_topic_access_policy( $topic_id ) {
+
+		}
+
+		public function update_section_access_policy( $section_id ) {
+
+		}
+
+		public function update_topic_access_policy( $topic_id ) {
+
+		}
+
 		/* USER SEGMENTS. */
+
+		public function get_user_segments() {
+
+		}
+
+		public function get_user_segments_applicable() {
+
+		}
+
+		public function get_user_segment( $user_segment_id ) {
+
+		}
+
+		public function get_sections_with_user_segment( $user_segment_id ) {
+
+		}
+
+		public function get_topics_with_user_segment( $user_segment_id ) {
+
+		}
+
+		public function add_user_segments() {
+
+		}
+
+		public function update_user_segment( $user_segment_id ) {
+
+		}
+
+		public function delete_user_segment( $user_segment_id ) {
+
+		}
 
 	}
 }
