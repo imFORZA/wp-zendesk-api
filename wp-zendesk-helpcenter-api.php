@@ -1,6 +1,6 @@
 <?php
 /**
- * WP ZenDesk HelpCenter API
+ * WP ZenDesk HelpCenter API (https://developer.zendesk.com/rest_api/docs/help_center/introduction)
  *
  * @package WP-ZD-HelpCenter-API
  */
@@ -179,7 +179,54 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 
 		/* ARTICLE COMMENTS. */
 
+		public function get_comments( $article_id, $locale = 'en-us' ) {
+
+		}
+
+		public function show_comment( $comment_id, $article_id, $locale = 'en-us' ) {
+
+		}
+
+		public function add_comment( $article_id ) {
+
+		}
+
+		public function update_comment( $comment_id, $article_id ) {
+
+		}
+
+		public function delete_comment( $comment_id, $article_id ) {
+
+		}
+
+
 		/* ARTICLE LABELS. */
+
+		public function get_article_labels( $locale = 'en-us' ) {
+
+		}
+
+		public function get_label_details( $label_id ) {
+
+		}
+
+		public function list_article_labels( $label_id ) {
+
+		}
+
+		public function create_label( $label_id ) {
+
+		}
+
+		public function delete_label( $label_id ) {
+
+		}
+
+		public function get_articles_by_label( $label_names ) {
+
+			// GET /api/v2/help_center/articles.json?label_names=photos,camera
+
+		}
 
 		/* ARTICLE ATTACHMENTS. */
 
@@ -215,7 +262,59 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 
 		/* POSTS. */
 
+		public function get_posts( $filter_by = '', $sort_by = '', $include = '' ) {
+
+		}
+
+		public function get_topic_posts( $topic_id, $filter_by = '', $sort_by = '', $include = '' ) {
+
+		}
+
+		public function get_topic_posts( $user_id, $filter_by = '', $sort_by = '', $include = '' ) {
+
+		}
+
+		public function get_post( $post_id ) {
+
+		}
+
+		public function add_post() {
+
+		}
+
+		public function update_post( $post_id ) {
+
+		}
+
+		public function delete_post( $post_id ) {
+
+		}
+
 		/* POST COMMENTS. */
+
+		public function get_post_comments( $post_id, $include = '' ) {
+
+		}
+
+		public function get_user_comments( $user_id, $include = '' ) {
+
+		}
+
+		public function get_post_comment( $post_id, $comment_id, $include = '' ) {
+
+		}
+
+		public function add_comment( $post_id ) {
+
+		}
+
+		public function update_comment( $post_id, $comment_id ) {
+
+		}
+
+		public function delete_comment( $post_id, $comment_id ) {
+
+		}
 
 		/* SUBSCRIPTIONS. */
 
