@@ -85,7 +85,7 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 		 * @param string $sort_order (default: '')
 		 * @return void
 		 */
-		public function list_categories( $locale = '', $sort_by = '', $sort_order = '') {
+		public function list_categories( $locale = '', $sort_by = '', $sort_order = '' ) {
 
 			$request = $this->base_uri . '/api/v2/help_center/' . $locale . '/categories.json';
 
