@@ -169,6 +169,14 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 
 		}
 
+		public function update_article_source_locale( $article_id ) {
+
+		}
+
+		public function associate_attachments_to_article( $article_id ) {
+
+		}
+
 		/* ARTICLE COMMENTS. */
 
 		/* ARTICLE LABELS. */
@@ -179,7 +187,31 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 
 		/* SEARCH. */
 
+		public function search_articles( $search_string, $created_before = '', $created_after = '', $created_at = '', $updated_before = '', $updated_after = '', $updated_at = '', $label_names = '', $category = '', $section = '' ) {
+
+		}
+
 		/* TOPICS. */
+
+		public function get_topics() {
+
+		}
+
+		public function show_topics( $topic_id ) {
+
+		}
+
+		public function add_topic() {
+
+		}
+
+		public function update_topic( $topic_id ) {
+
+		}
+
+		public function delete_topic( $topic_id ) {
+
+		}
 
 		/* POSTS. */
 
