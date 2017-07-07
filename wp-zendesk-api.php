@@ -492,6 +492,7 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 		* Creates a comment to the specified ticket with the specified text.
 		* The $public argument, as the name suggests, tells Zendesk whether
 		* this comment should be public or private.
+		* FOR. TICKETS. Not requests.
 		*
 		*/
 		public function create_comment( $ticket_id, $text, $public = true ) {
@@ -505,6 +506,20 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 			);
 
 			$result = $this->_put( 'tickets/' . $ticket_id . '.json', $ticket );
+
+			return $this->checker( $result, __( 'A new comment could not be created at this time, please try again later.', 'wp-zendesk-api' ), true );
+		}
+
+		public function create_comment_request( $request_id, $text ){
+			$request = array(
+				'request' => array(
+					'comment' => array(
+						'body'   => $text,
+					),
+				),
+			);
+
+			$result = $this->_put( 'requests/' . $request_id . '.json', $request );
 
 			return $this->checker( $result, __( 'A new comment could not be created at this time, please try again later.', 'wp-zendesk-api' ), true );
 		}
@@ -933,7 +948,6 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 				$headers['Authorization'] = 'Basic ' . base64_encode( $this->username . '/token:' . $this->api_key );
 			}
 
-			// error_log("headers: " . print_r( $headers, true ));
 			$target_url = trailingslashit( $this->api_url ) . $endpoint;
 
 			$result     = wp_remote_get(
@@ -974,10 +988,17 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 		private function _post( $endpoint, $post_data = null, $extra_headers = array() ) {
 
 			$post_data  = json_encode( $post_data );
-			$headers    = array(
-				'Authorization' => 'Basic ' . base64_encode( $this->username . ':' . $this->password ),
-				'Content-Type'  => 'application/json',
-			);
+			$headers;
+			if ( ! $this->api_key ) {
+				$headers    = array(
+					'Authorization' => 'Basic ' . ( $altauth != false ? base64_encode( $altauth ) : base64_encode( $this->username . ':' . $this->password ) ), // '',// .
+					'Content-Type'  => 'application/json',
+				);
+			}
+
+			if ( $this->api_key != false ) {
+				$headers['Authorization'] = 'Basic ' . base64_encode( $this->username . '/token:' . $this->api_key );
+			}
 			$headers    = array_merge( $headers, $extra_headers );
 			$target_url = trailingslashit( $this->api_url ) . $endpoint;
 			$result     = wp_remote_post(
@@ -1019,10 +1040,18 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 		 */
 		private function _put( $endpoint, $put_data = null, $extra_headers = array() ) {
 			$put_data = json_encode( $put_data );
-			$headers  = array(
-				'Authorization' => 'Basic ' . base64_encode( $this->username . ':' . $this->password ),
-				'Content-Type'  => 'application/json',
-			);
+			$headers;
+			if ( ! $this->api_key ) {
+				$headers    = array(
+					'Authorization' => 'Basic ' . ( $altauth != false ? base64_encode( $altauth ) : base64_encode( $this->username . ':' . $this->password ) ), // '',// .
+					'Content-Type'  => 'application/json',
+				);
+			}
+
+			if ( $this->api_key != false ) {
+				$headers['Authorization'] = 'Basic ' . base64_encode( $this->username . '/token:' . $this->api_key );
+				$headers['Content-Type']  = 'application/json';
+			}
 			$headers  = array_merge( $headers, $extra_headers );
 
 			$target_url = trailingslashit( $this->api_url ) . $endpoint;
@@ -1062,10 +1091,17 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 		 */
 		private function _delete( $endpoint, $put_data = null, $extra_headers = array() ) {
 			$put_data = json_encode( $put_data );
-			$headers  = array(
-				'Authorization' => 'Basic ' . base64_encode( $this->username . ':' . $this->password ),
-				'Content-Type'  => 'application/json',
-			);
+			$headers;
+			if ( ! $this->api_key ) {
+				$headers    = array(
+					'Authorization' => 'Basic ' . ( $altauth != false ? base64_encode( $altauth ) : base64_encode( $this->username . ':' . $this->password ) ), // '',// .
+					'Content-Type'  => 'application/json',
+				);
+			}
+
+			if ( $this->api_key != false ) {
+				$headers['Authorization'] = 'Basic ' . base64_encode( $this->username . '/token:' . $this->api_key );
+			}
 			$headers  = array_merge( $headers, $extra_headers );
 
 			$target_url = trailingslashit( $this->api_url ) . $endpoint;
