@@ -159,7 +159,7 @@ class Zendesk_Wordpress_API {
 	/* TICKETS */
 
 	// https://developer.zendesk.com/rest_api/docs/core/tickets#list-tickets
-	public function list_tickets( $per_page = 100, $page = 1 ){
+	public function list_tickets( $per_page = 100, $page = 1, $sort = '' ){
     $request = 'tickets.json';
 
     if( $per_page != 100 ){
@@ -168,8 +168,20 @@ class Zendesk_Wordpress_API {
       if( $page != 1 ){
         $request .= '&page='.$page;
       }
+
+      if( $sort != '' ){
+        $request .= '&sort_by='.$sort;
+      }
     }else if( $page != 1 ){
       $request .= '?page='.$page;
+
+      if( $sort != '' ){
+        $request .= '&sort_by='.$sort;
+      }
+    }
+
+    if( $sort != '' ){
+      $request .= '?sort_by='.$sort;
     }
 
     $result = $this->_get( $request );
