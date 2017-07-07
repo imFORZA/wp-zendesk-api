@@ -137,6 +137,38 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 
 		/* ARTICLES. */
 
+		public function get_articles( $locale = 'en-us' ) {
+
+		}
+
+		public function get_category_articles( $category_id, $locale = 'en-us', $sort_by = '', $sort_order = '', $label_names = '' ) {
+
+		}
+
+		public function get_section_articles( $section_id, $locale = 'en-us', $sort_by = '', $sort_order = '', $label_names = '' ) {
+
+		}
+
+		public function get_user_articles( $user_id, $sort_by = '', $sort_order = '', $label_names = '' ) {
+
+		}
+
+		public function get_incremental_articles( $start_time, $sort_by = '', $sort_order = '', $label_names = '' ) {
+
+		}
+
+		public function add_article( $article_id, $locale = 'en-us' ) {
+
+		}
+
+		public function update_article( $article_id, $locale = 'en-us' ) {
+
+		}
+
+		public function archive_article( $article_id ) {
+
+		}
+
 		/* ARTICLE COMMENTS. */
 
 		/* ARTICLE LABELS. */
