@@ -1,6 +1,6 @@
 <?php
 /**
- * WP ZenDesk HelpCenter API
+ * WP ZenDesk HelpCenter API (https://developer.zendesk.com/rest_api/docs/help_center/introduction)
  *
  * @package WP-ZD-HelpCenter-API
  */
@@ -85,7 +85,7 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 		 * @param string $sort_order (default: '')
 		 * @return void
 		 */
-		public function list_categories( $locale = '', $sort_by = '', $sort_order = '') {
+		public function list_categories( $locale = '', $sort_by = '', $sort_order = '' ) {
 
 			$request = $this->base_uri . '/api/v2/help_center/' . $locale . '/categories.json';
 
@@ -137,9 +137,96 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 
 		/* ARTICLES. */
 
+		public function get_articles( $locale = 'en-us' ) {
+
+		}
+
+		public function get_category_articles( $category_id, $locale = 'en-us', $sort_by = '', $sort_order = '', $label_names = '' ) {
+
+		}
+
+		public function get_section_articles( $section_id, $locale = 'en-us', $sort_by = '', $sort_order = '', $label_names = '' ) {
+
+		}
+
+		public function get_user_articles( $user_id, $sort_by = '', $sort_order = '', $label_names = '' ) {
+
+		}
+
+		public function get_incremental_articles( $start_time, $sort_by = '', $sort_order = '', $label_names = '' ) {
+
+		}
+
+		public function add_article( $article_id, $locale = 'en-us' ) {
+
+		}
+
+		public function update_article( $article_id, $locale = 'en-us' ) {
+
+		}
+
+		public function archive_article( $article_id ) {
+
+		}
+
+		public function update_article_source_locale( $article_id ) {
+
+		}
+
+		public function associate_attachments_to_article( $article_id ) {
+
+		}
+
 		/* ARTICLE COMMENTS. */
 
+		public function get_comments( $article_id, $locale = 'en-us' ) {
+
+		}
+
+		public function show_comment( $comment_id, $article_id, $locale = 'en-us' ) {
+
+		}
+
+		public function add_comment( $article_id ) {
+
+		}
+
+		public function update_comment( $comment_id, $article_id ) {
+
+		}
+
+		public function delete_comment( $comment_id, $article_id ) {
+
+		}
+
+
 		/* ARTICLE LABELS. */
+
+		public function get_article_labels( $locale = 'en-us' ) {
+
+		}
+
+		public function get_label_details( $label_id ) {
+
+		}
+
+		public function list_article_labels( $label_id ) {
+
+		}
+
+		public function create_label( $label_id ) {
+
+		}
+
+		public function delete_label( $label_id ) {
+
+		}
+
+		public function get_articles_by_label( $label_names ) {
+
+			// GET /api/v2/help_center/articles.json?label_names=photos,camera
+
+		}
 
 		/* ARTICLE ATTACHMENTS. */
 
@@ -147,17 +234,164 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 
 		/* SEARCH. */
 
+		public function search_articles( $search_string, $created_before = '', $created_after = '', $created_at = '', $updated_before = '', $updated_after = '', $updated_at = '', $label_names = '', $category = '', $section = '' ) {
+
+		}
+
 		/* TOPICS. */
+
+		public function get_topics() {
+
+		}
+
+		public function show_topics( $topic_id ) {
+
+		}
+
+		public function add_topic() {
+
+		}
+
+		public function update_topic( $topic_id ) {
+
+		}
+
+		public function delete_topic( $topic_id ) {
+
+		}
 
 		/* POSTS. */
 
+		public function get_posts( $filter_by = '', $sort_by = '', $include = '' ) {
+
+		}
+
+		public function get_topic_posts( $topic_id, $filter_by = '', $sort_by = '', $include = '' ) {
+
+		}
+
+		public function get_topic_posts( $user_id, $filter_by = '', $sort_by = '', $include = '' ) {
+
+		}
+
+		public function get_post( $post_id ) {
+
+		}
+
+		public function add_post() {
+
+		}
+
+		public function update_post( $post_id ) {
+
+		}
+
+		public function delete_post( $post_id ) {
+
+		}
+
 		/* POST COMMENTS. */
 
+		public function get_post_comments( $post_id, $include = '' ) {
+
+		}
+
+		public function get_user_comments( $user_id, $include = '' ) {
+
+		}
+
+		public function get_post_comment( $post_id, $comment_id, $include = '' ) {
+
+		}
+
+		public function add_comment( $post_id ) {
+
+		}
+
+		public function update_comment( $post_id, $comment_id ) {
+
+		}
+
+		public function delete_comment( $post_id, $comment_id ) {
+
+		}
+
 		/* SUBSCRIPTIONS. */
+
+		public function get_article_subscriptions( $article_id, $locale = 'en-us', $include = '' ) {
+
+		}
+
+		public function get_article_subscription( $subscription_id, $article_id, $locale = 'en-us', $include = '' ) {
+
+		}
+
+		public function add_article_subscription( $article_id ) {
+
+		}
+
+		public function delete_article_subscription( $article_id, $subscription_id ) {
+
+		}
+
+		public function list_section_subscriptions( $section_id, $locale = 'en-us', $include = '' ) {
+
+		}
+
+		public function show_section_subscription( $section_id, $subscription_id, $locale = 'en-us', $include = '' ) {
+
+		}
+
+		public function add_section_subscription( $section_id, $include_comments = '', $user_id = '' ) {
+
+		}
+
+		public function delete_section_subscription( $section_id, $subscription_id ) {
+
+		}
+
+		public function get_subscriptions_by_user( $user_id, $include = '' ) {
+
+		}
+
+		public function get_post_subscriptions( $post_id, $include = '' ) {
+
+		}
+
+		public function get_post_subscription( $post_id, $subscription_id, $include = '' ) {
+
+		}
+
+		public function add_post_subscription( $post_id ) {
+
+		}
+
+		public function delete_post_subscription( $post_id, $subscription_id ) {
+
+		}
+
+		public function get_topic_subscriptions( $topic_id, $include = '' ) {
+
+		}
+
+		public function get_topic_subscription( $topic_id, $subscription_id, $include = '' ) {
+
+		}
+
+		public function add_topic_subscription( $topic_id ) {
+
+		}
+
+		public function delete_topic_subscription( $topic_id, $subscription_id ) {
+
+		}
+
 
 		/* VOTES. */
 
 		/* ACCESS POLICIES. */
+
+		/* USER SEGMENTS. */
 
 	}
 }
