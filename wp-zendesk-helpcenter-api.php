@@ -362,8 +362,6 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 
 		}
 
-
-
 		public function add_post_subscription( $post_id ) {
 
 		}
@@ -372,10 +370,28 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 
 		}
 
+		public function get_topic_subscriptions( $topic_id, $include = '' ) {
+
+		}
+
+		public function get_topic_subscription( $topic_id, $subscription_id, $include = '' ) {
+
+		}
+
+		public function add_topic_subscription( $topic_id ) {
+
+		}
+
+		public function delete_topic_subscription( $topic_id, $subscription_id ) {
+
+		}
+
 
 		/* VOTES. */
 
 		/* ACCESS POLICIES. */
+
+		/* USER SEGMENTS. */
 
 	}
 }
