@@ -318,6 +318,61 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 
 		/* SUBSCRIPTIONS. */
 
+		public function get_article_subscriptions( $article_id, $locale = 'en-us', $include = '' ) {
+
+		}
+
+		public function get_article_subscription( $subscription_id, $article_id, $locale = 'en-us', $include = '' ) {
+
+		}
+
+		public function add_article_subscription( $article_id ) {
+
+		}
+
+		public function delete_article_subscription( $article_id, $subscription_id ) {
+
+		}
+
+		public function list_section_subscriptions( $section_id, $locale = 'en-us', $include = '' ) {
+
+		}
+
+		public function show_section_subscription( $section_id, $subscription_id, $locale = 'en-us', $include = '' ) {
+
+		}
+
+		public function add_section_subscription( $section_id, $include_comments = '', $user_id = '' ) {
+
+		}
+
+		public function delete_section_subscription( $section_id, $subscription_id ) {
+
+		}
+
+		public function get_subscriptions_by_user( $user_id, $include = '' ) {
+
+		}
+
+		public function get_post_subscriptions( $post_id, $include = '' ) {
+
+		}
+
+		public function get_post_subscription( $post_id, $subscription_id, $include = '' ) {
+
+		}
+
+
+
+		public function add_post_subscription( $post_id ) {
+
+		}
+
+		public function delete_post_subscription( $post_id, $subscription_id ) {
+
+		}
+
+
 		/* VOTES. */
 
 		/* ACCESS POLICIES. */
