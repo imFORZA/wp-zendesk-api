@@ -30,13 +30,6 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 		 */
 		static private $api_key;
 
-		/**
-		 * URL to the API.
-		 *
-		 * @var string
-		 */
-		private $base_uri = 'https://' . static::$install_name . '.zendesk.com';
-
 
 		/**
 		 * __construct function.
@@ -87,7 +80,7 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 		 */
 		public function list_categories( $locale = '', $sort_by = '', $sort_order = '' ) {
 
-			$request = $this->base_uri . '/api/v2/help_center/' . $locale . '/categories.json';
+			$request = 'https://' . static::$install_name . '.zendesk.com/api/v2/help_center/' . $locale . '/categories.json';
 
 			return $this->fetch( $request );
 
@@ -139,7 +132,7 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 
 		public function get_articles( $locale = 'en-us' ) {
 
-			$request = $this->base_uri . '/api/v2/help_center/'. $locale .'/articles.json';
+			$request = 'https://' . static::$install_name . '.zendesk.com/api/v2/help_center/' . $locale . '/articles.json';
 
 			return $this->fetch( $request );
 
@@ -275,7 +268,7 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 
 		}
 
-		public function get_topic_posts( $user_id, $filter_by = '', $sort_by = '', $include = '' ) {
+		public function get_topic_post( $user_id, $filter_by = '', $sort_by = '', $include = '' ) {
 
 		}
 
@@ -309,15 +302,15 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 
 		}
 
-		public function add_comment( $post_id ) {
+		public function add_comments( $post_id ) {
 
 		}
 
-		public function update_comment( $post_id, $comment_id ) {
+		public function update_comments( $post_id, $comment_id ) {
 
 		}
 
-		public function delete_comment( $post_id, $comment_id ) {
+		public function delete_comments( $post_id, $comment_id ) {
 
 		}
 
