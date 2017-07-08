@@ -232,7 +232,28 @@ if ( ! class_exists( 'ZendeskHelpCenterAPI' ) ) {
 
 		/* SEARCH. */
 
+
+		/**
+		 * search_articles function.
+		 *
+		 * @access public
+		 * @param mixed $search_string
+		 * @param string $created_before (default: '')
+		 * @param string $created_after (default: '')
+		 * @param string $created_at (default: '')
+		 * @param string $updated_before (default: '')
+		 * @param string $updated_after (default: '')
+		 * @param string $updated_at (default: '')
+		 * @param string $label_names (default: '')
+		 * @param string $category (default: '')
+		 * @param string $section (default: '')
+		 * @return void
+		 */
 		public function search_articles( $search_string, $created_before = '', $created_after = '', $created_at = '', $updated_before = '', $updated_after = '', $updated_at = '', $label_names = '', $category = '', $section = '' ) {
+
+			$request = 'https://' . static::$install_name . '.zendesk.com/api/v2/help_center/articles/search.json?query=' . $search_string;
+
+			return $this->fetch( $request );
 
 		}
 
