@@ -1203,20 +1203,56 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 			// GET /api/v2/users/{id}/tags.json
 		}
 
-		public function set_ticket_tags() {
+		public function set_ticket_tags( $ticket_id ) {
 
 		}
 
-		public function set_topic_tags() {
+		public function set_topic_tags( $topic_id ) {
 
 		}
 
-		public function set_org_tags() {
+		public function set_org_tags( $org_id ) {
 
 		}
 
-		public function set_users_tags() {
+		public function set_users_tags( $user_id ) {
 
+		}
+
+		public function add_ticket_tags( $ticket_id ) {
+
+		}
+
+		public function add_topic_tags( $topic_id ) {
+
+		}
+
+		public function add_org_tags( $org_id ) {
+
+		}
+
+		public function add_users_tags( $user_id ) {
+
+		}
+
+		public function remove_ticket_tags( $ticket_id ) {
+
+		}
+
+		public function remove_topic_tags( $topic_id ) {
+
+		}
+
+		public function remove_org_tags( $org_id ) {
+
+		}
+
+		public function remove_users_tags( $user_id ) {
+
+		}
+
+		public function get_autocomplete_tags( $name ) {
+			// GET /api/v2/autocomplete/tags.json?name={name}
 		}
 
 		/* CHANNEL FRAMEWORK. */
