@@ -1165,5 +1165,83 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 			}
 			return $result; // cause probably 400 error
 		}
+
+
+		/* JOB STATUSES. */
+
+		public function get_job_statuses() {
+			// GET /api/v2/job_statuses.json
+		}
+
+		public function get_job_status( $job_id ) {
+
+		}
+
+		public function get_bulk_job_status( $job_ids ) {
+
+		}
+
+		/* TAGS. */
+
+		public function get_tags() {
+			// GET /api/v2/tags.json
+		}
+
+		public function get_tickets_tags( $ticket_id ) {
+			// GET /api/v2/tickets/{id}/tags.json
+		}
+
+		public function get_topics_tags( $topic_id ) {
+			// GET /api/v2/topics/{id}/tags.json
+		}
+
+		public function get_org_tags( $org_id ) {
+			// GET /api/v2/organizations/{id}/tags.json
+		}
+
+		public function get_user_tags( $user_id ) {
+			// GET /api/v2/users/{id}/tags.json
+		}
+
+		public function set_ticket_tags() {
+
+		}
+
+		public function set_topic_tags() {
+
+		}
+
+		public function set_org_tags() {
+
+		}
+
+		public function set_users_tags() {
+
+		}
+
+		/* CHANNEL FRAMEWORK. */
+
+		public function push_channel_framework() {
+			// POST /api/v2/any_channel/push
+		}
+
+		/* TWITTER CHANNEL. */
+
+		public function list_monitored_twitter_handles() {
+			// GET /api/v2/channels/twitter/monitored_twitter_handles.json
+		}
+
+		public function get_monitored_twitter_handle( $twitter_monitor_handle_id ) {
+			// GET /api/v2/channels/twitter/monitored_twitter_handles/{id}.json
+		}
+
+		public function create_ticket_from_tweet() {
+			// POST /api/v2/channels/twitter/tickets.json
+		}
+
+		public function get_twicket_status( $twicket_id ) {
+			// GET /api/v2/channels/twitter/tickets/{id}/statuses.json
+		}
+
 	}
 }
