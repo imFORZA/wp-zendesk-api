@@ -1166,6 +1166,35 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 			return $result; // cause probably 400 error
 		}
 
+		/* AUTHORIZED GLOBAL CLIENTS. */
+
+		public function get_authorized_global_clients() {
+			// GET /api/v2/oauth/global_clients.json
+		}
+
+		/* ACTIVITY STREAM. */
+
+		public function list_activites() {
+
+		}
+
+		public function get_activity( $activity_id ) {
+
+		}
+
+		/* BOOKMARKS. */
+
+		public function list_bookmarks() {
+			// GET /api/v2/bookmarks.json
+		}
+
+		public function add_bookmark() {
+
+		}
+
+		public function delete_bookmark() {
+
+		}
 
 		/* JOB STATUSES. */
 
@@ -1178,6 +1207,34 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 		}
 
 		public function get_bulk_job_status( $job_ids ) {
+
+		}
+
+		/* PUSH NOTIFICATION DEVICES. */
+
+		public function bulk_unregister_push_notification_devices() {
+			// POST /api/v2/push_notification_devices/destroy_many.json
+		}
+
+		/* RESOURCE COLLECTIONS. */
+
+		public function get_resource_collections() {
+			// GET /api/v2/resource_collections.json
+		}
+
+		public function get_resource_collection( $resource_collection_id ) {
+
+		}
+
+		public function add_resource_collection() {
+			// POST /api/v2/resource_collections.json
+		}
+
+		public function update_resource_collection() {
+
+		}
+
+		public function delete_resource_collection() {
 
 		}
 
