@@ -830,64 +830,11 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 			return $this->checker( $result, __( 'Password cannot be set right now.', 'wp-zendesk-api' ) );
 		}
 
-		/* GROUPS */
 
 
 		/* TICKET FIELDS */
 
-		/**
-		 * list_groups function.
-		 *
-		 * @access public
-		 * @return void
-		 */
-		public function list_groups() {
-			$result = $this->_get( 'groups.json' );
 
-			return $this->checker( $result, __( 'Users cannot be accessed right now.', 'wp-zendesk-api' ) );
-		}
-
-		/**
-		 * show_group function.
-		 *
-		 * @access public
-		 * @param mixed $group_id
-		 * @return void
-		 */
-		public function show_group( $group_id ) {
-			$result = $this->_get( 'groups/' . $user_id . '.json' );
-
-			if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
-				$user = json_decode( $result['body'] );
-				set_transient( $transient_key, $user, $this->cache_timeout_user );
-
-				return $user;
-			} else {
-				return new WP_Error( 'zendesk-api-error', __( 'The requested user details could not be fetched at this time, please try again later.', 'wp-zendesk-api' ) );
-			}
-		}
-
-		/**
-		 * update_groups function.
-		 *
-		 * @access public
-		 * @param mixed $stuff
-		 * @return void
-		 */
-		public function update_groups( $stuff ) {
-
-		}
-
-		/**
-		 * delete_group function.
-		 *
-		 * @access public
-		 * @param mixed $group_id
-		 * @return void
-		 */
-		public function delete_group( $group_id ) {
-
-		}
 
 
 		/**
@@ -923,248 +870,7 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 			return $fields;
 		}
 
-		/* HELPER FUNCTIONS */
 
-
-		/**
-		 * API Get.
-		 *
-		 * @access private
-		 * @param mixed $endpoint
-		 * @param array $extra_headers (default: array())
-		 * @param bool  $altauth (default: false)
-		 * @return void
-		 */
-		private function _get( $endpoint, $extra_headers = array(), $altauth = false ) {
-			$headers;
-			if ( ! $this->api_key ) {
-				$headers    = array(
-					'Authorization' => 'Basic ' . ( $altauth != false ? base64_encode( $altauth ) : base64_encode( $this->username . ':' . $this->password ) ), // '',// .
-					'Content-Type'  => 'application/json',
-				);
-			}
-
-			if ( $this->api_key != false ) {
-				$headers['Authorization'] = 'Basic ' . base64_encode( $this->username . '/token:' . $this->api_key );
-			}
-
-			$target_url = trailingslashit( $this->api_url ) . $endpoint;
-
-			$result     = wp_remote_get(
-				$target_url,
-				array(
-					'headers' => $headers,
-					'sslverify' => false,
-					'user-agent' => ZENDESK_USER_AGENT,
-				)
-			);
-
-			if ( ( defined( 'WP_DEBUG' ) && WP_DEBUG ) && is_wp_error( $result ) ) {
-				$error_string = 'Zendesk API GET Error (' . $target_url . '): ' . $result->get_error_message();
-				if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
-					echo $error_string . '<br />';
-				}
-
-				if ( class_exists( 'Zendesk_Wordpress_Logger' ) ) {
-					Zendesk_Wordpress_Logger::log( $error_string, true );
-				}
-			}
-
-			return $result;
-		}
-
-		/**
-		 * API POST.
-		 * Similar to the GET method, this function forms the request params
-		 * as a POST request to the Zendesk API, given an endpoint and a
-		 * $post_data which is generally an associative array.
-		 *
-		 * @access private
-		 * @param mixed $endpoint
-		 * @param mixed $post_data (default: null)
-		 * @param array $extra_headers (default: array())
-		 * @return void
-		 */
-		private function _post( $endpoint, $post_data = null, $extra_headers = array() ) {
-
-			$post_data  = json_encode( $post_data );
-			$headers;
-			if ( ! $this->api_key ) {
-				$headers    = array(
-					'Authorization' => 'Basic ' . ( $altauth != false ? base64_encode( $altauth ) : base64_encode( $this->username . ':' . $this->password ) ), // '',// .
-					'Content-Type'  => 'application/json',
-				);
-			}
-
-			if ( $this->api_key != false ) {
-				$headers['Authorization'] = 'Basic ' . base64_encode( $this->username . '/token:' . $this->api_key );
-			}
-			$headers    = array_merge( $headers, $extra_headers );
-			$target_url = trailingslashit( $this->api_url ) . $endpoint;
-			$result     = wp_remote_post(
-				$target_url,
-				array(
-					'redirection' => 0,
-					'headers'     => $headers,
-					'body'        => $post_data,
-					'sslverify'   => false,
-					'user-agent' => ZENDESK_USER_AGENT,
-				)
-			);
-
-			if ( ( defined( 'WP_DEBUG' ) && WP_DEBUG ) && is_wp_error( $result ) ) {
-				$error_string = 'Zendesk API POST Error (' . $target_url . '): ' . $result->get_error_message();
-				if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
-					echo $error_string . '<br />';
-				}
-				if ( class_exists( 'Zendesk_Wordpress_Logger' ) ) {
-					Zendesk_Wordpress_Logger::log( $error_string, true );
-				}
-			}
-
-			return $result;
-		}
-
-		/*
-		 * API PUT
-		 *
-		 * Following the above pattern, this function uses wp_remote_request
-		 * to fire a PUT request against the Zendesk API. Returns the result
-		 * object as it was returned by the request.
-		 *
-		 * @access private
-		 * @param mixed $endpoint
-		 * @param mixed $put_data (default: null)
-		 * @param array $extra_headers (default: array())
-		 * @return void
-		 */
-		private function _put( $endpoint, $put_data = null, $extra_headers = array() ) {
-			$put_data = json_encode( $put_data );
-			$headers;
-			if ( ! $this->api_key ) {
-				$headers    = array(
-					'Authorization' => 'Basic ' . ( $altauth != false ? base64_encode( $altauth ) : base64_encode( $this->username . ':' . $this->password ) ), // '',// .
-					'Content-Type'  => 'application/json',
-				);
-			}
-
-			if ( $this->api_key != false ) {
-				$headers['Authorization'] = 'Basic ' . base64_encode( $this->username . '/token:' . $this->api_key );
-				$headers['Content-Type']  = 'application/json';
-			}
-			$headers  = array_merge( $headers, $extra_headers );
-
-			$target_url = trailingslashit( $this->api_url ) . $endpoint;
-			$result     = wp_remote_request(
-				$target_url,
-				array(
-					'method'    => 'PUT',
-					'headers'   => $headers,
-					'body'      => $put_data,
-					'sslverify' => false,
-					'user-agent' => ZENDESK_USER_AGENT,
-				)
-			);
-
-			if ( ( defined( 'WP_DEBUG' ) && WP_DEBUG ) && is_wp_error( $result ) ) {
-				$error_string = 'Zendesk API PUT Error (' . $target_url . '): ' . $result->get_error_message();
-				if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
-					echo $error_string . '<br />';
-				}
-
-				if ( class_exists( 'Zendesk_Wordpress_Logger' ) ) {
-					Zendesk_Wordpress_Logger::log( $error_string, true );
-				}
-			}
-
-			return $result;
-		}
-
-		/**
-		 * _delete function.
-		 *
-		 * @access private
-		 * @param mixed $endpoint
-		 * @param mixed $put_data (default: null)
-		 * @param array $extra_headers (default: array())
-		 * @return void
-		 */
-		private function _delete( $endpoint, $put_data = null, $extra_headers = array() ) {
-			$put_data = json_encode( $put_data );
-			$headers;
-			if ( ! $this->api_key ) {
-				$headers    = array(
-					'Authorization' => 'Basic ' . ( $altauth != false ? base64_encode( $altauth ) : base64_encode( $this->username . ':' . $this->password ) ), // '',// .
-					'Content-Type'  => 'application/json',
-				);
-			}
-
-			if ( $this->api_key != false ) {
-				$headers['Authorization'] = 'Basic ' . base64_encode( $this->username . '/token:' . $this->api_key );
-			}
-			$headers  = array_merge( $headers, $extra_headers );
-
-			$target_url = trailingslashit( $this->api_url ) . $endpoint;
-			$result     = wp_remote_request(
-				$target_url,
-				array(
-					'method'    => 'DELETE',
-					'headers'   => $headers,
-					'body'      => $put_data,
-					'sslverify' => false,
-					'user-agent' => ZENDESK_USER_AGENT,
-				)
-			);
-
-			if ( ( defined( 'WP_DEBUG' ) && WP_DEBUG ) && is_wp_error( $result ) ) {
-				$error_string = 'Zendesk API DELETE Error (' . $target_url . '): ' . $result->get_error_message();
-				if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
-					echo $error_string . '<br />';
-				}
-
-				if ( class_exists( 'Zendesk_Wordpress_Logger' ) ) {
-					Zendesk_Wordpress_Logger::log( $error_string, true );
-				}
-			}
-
-			return $result;
-		}
-
-		/*
-		 * Cache Salts (helper)
-		 *
-		 * Use this function to compose Transient API keys, prepends a zd-
-		 * and generates a salt based on the username and the api_url and
-		 * the provided postfix variable.
-		 *
-		 *
-		 * @access private
-		 * @param mixed $postfix
-		 * @return void
-		 */
-		private function _salt( $postfix ) {
-			return 'zd-' . md5( 'zendesk-' . $this->username . $this->api_url . $postfix );
-		}
-
-		/**
-		 * checker function.
-		 *
-		 * @access private
-		 * @param mixed $result
-		 * @param mixed $message
-		 * @param bool  $always_error (default: false)
-		 * @return void
-		 */
-		private function checker( $result, $message, $always_error = false ) {
-			if ( ! is_wp_error( $result ) && ($result['response']['code'] == 200 || $result['response']['code'] == 201) ) {
-				return json_decode( $result['body'] );
-			} else {
-				if ( is_wp_error( $result ) || $always_error ) {
-					return new WP_Error( 'zendesk-api-error', $message );
-				}
-			}
-			return $result; // cause probably 400 error.
-		}
 
 		/* SUSPENDED TICKETS. */
 
@@ -1187,6 +893,60 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 		/* END USERS. */
 
 		/* GROUPS. */
+
+				/**
+		 * list_groups function.
+		 *
+		 * @access public
+		 * @return void
+		 */
+		public function list_groups() {
+			$result = $this->_get( 'groups.json' );
+
+			return $this->checker( $result, __( 'Users cannot be accessed right now.', 'wp-zendesk-api' ) );
+		}
+
+		/**
+		 * Show Group.
+		 *
+		 * @access public
+		 * @param mixed $group_id Group ID.
+		 * @return void
+		 */
+		public function show_group( $group_id ) {
+			$result = $this->_get( 'groups/' . $user_id . '.json' );
+
+			if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
+				$user = json_decode( $result['body'] );
+				set_transient( $transient_key, $user, $this->cache_timeout_user );
+
+				return $user;
+			} else {
+				return new WP_Error( 'zendesk-api-error', __( 'The requested user details could not be fetched at this time, please try again later.', 'wp-zendesk-api' ) );
+			}
+		}
+
+		/**
+		 * Update Groups.
+		 *
+		 * @access public
+		 * @param mixed $stuff Stuff.
+		 * @return void
+		 */
+		public function update_groups( $stuff ) {
+
+		}
+
+		/**
+		 * Delete Group.
+		 *
+		 * @access public
+		 * @param mixed $group_id
+		 * @return void
+		 */
+		public function delete_group( $group_id ) {
+
+		}
 
 		/* GROUP MEMBERSHIPS. */
 
@@ -1492,6 +1252,249 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 
 		public function get_twicket_status( $twicket_id ) {
 			// GET /api/v2/channels/twitter/tickets/{id}/statuses.json
+		}
+
+
+			/* HELPER FUNCTIONS */
+
+		/**
+		 * API Get.
+		 *
+		 * @access private
+		 * @param mixed $endpoint
+		 * @param array $extra_headers (default: array())
+		 * @param bool  $altauth (default: false)
+		 * @return void
+		 */
+		private function _get( $endpoint, $extra_headers = array(), $altauth = false ) {
+			$headers;
+			if ( ! $this->api_key ) {
+				$headers    = array(
+					'Authorization' => 'Basic ' . ( $altauth != false ? base64_encode( $altauth ) : base64_encode( $this->username . ':' . $this->password ) ), // '',// .
+					'Content-Type'  => 'application/json',
+				);
+			}
+
+			if ( $this->api_key != false ) {
+				$headers['Authorization'] = 'Basic ' . base64_encode( $this->username . '/token:' . $this->api_key );
+			}
+
+			$target_url = trailingslashit( $this->api_url ) . $endpoint;
+
+			$result     = wp_remote_get(
+				$target_url,
+				array(
+					'headers' => $headers,
+					'sslverify' => false,
+					'user-agent' => ZENDESK_USER_AGENT,
+				)
+			);
+
+			if ( ( defined( 'WP_DEBUG' ) && WP_DEBUG ) && is_wp_error( $result ) ) {
+				$error_string = 'Zendesk API GET Error (' . $target_url . '): ' . $result->get_error_message();
+				if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
+					echo $error_string . '<br />';
+				}
+
+				if ( class_exists( 'Zendesk_Wordpress_Logger' ) ) {
+					Zendesk_Wordpress_Logger::log( $error_string, true );
+				}
+			}
+
+			return $result;
+		}
+
+		/**
+		 * API POST.
+		 * Similar to the GET method, this function forms the request params
+		 * as a POST request to the Zendesk API, given an endpoint and a
+		 * $post_data which is generally an associative array.
+		 *
+		 * @access private
+		 * @param mixed $endpoint
+		 * @param mixed $post_data (default: null)
+		 * @param array $extra_headers (default: array())
+		 * @return void
+		 */
+		private function _post( $endpoint, $post_data = null, $extra_headers = array() ) {
+
+			$post_data  = json_encode( $post_data );
+			$headers;
+			if ( ! $this->api_key ) {
+				$headers    = array(
+					'Authorization' => 'Basic ' . ( $altauth != false ? base64_encode( $altauth ) : base64_encode( $this->username . ':' . $this->password ) ), // '',// .
+					'Content-Type'  => 'application/json',
+				);
+			}
+
+			if ( $this->api_key != false ) {
+				$headers['Authorization'] = 'Basic ' . base64_encode( $this->username . '/token:' . $this->api_key );
+			}
+			$headers    = array_merge( $headers, $extra_headers );
+			$target_url = trailingslashit( $this->api_url ) . $endpoint;
+			$result     = wp_remote_post(
+				$target_url,
+				array(
+					'redirection' => 0,
+					'headers'     => $headers,
+					'body'        => $post_data,
+					'sslverify'   => false,
+					'user-agent' => ZENDESK_USER_AGENT,
+				)
+			);
+
+			if ( ( defined( 'WP_DEBUG' ) && WP_DEBUG ) && is_wp_error( $result ) ) {
+				$error_string = 'Zendesk API POST Error (' . $target_url . '): ' . $result->get_error_message();
+				if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
+					echo $error_string . '<br />';
+				}
+				if ( class_exists( 'Zendesk_Wordpress_Logger' ) ) {
+					Zendesk_Wordpress_Logger::log( $error_string, true );
+				}
+			}
+
+			return $result;
+		}
+
+		/*
+		 * API PUT
+		 *
+		 * Following the above pattern, this function uses wp_remote_request
+		 * to fire a PUT request against the Zendesk API. Returns the result
+		 * object as it was returned by the request.
+		 *
+		 * @access private
+		 * @param mixed $endpoint
+		 * @param mixed $put_data (default: null)
+		 * @param array $extra_headers (default: array())
+		 * @return void
+		 */
+		private function _put( $endpoint, $put_data = null, $extra_headers = array() ) {
+			$put_data = json_encode( $put_data );
+			$headers;
+			if ( ! $this->api_key ) {
+				$headers    = array(
+					'Authorization' => 'Basic ' . ( $altauth != false ? base64_encode( $altauth ) : base64_encode( $this->username . ':' . $this->password ) ), // '',// .
+					'Content-Type'  => 'application/json',
+				);
+			}
+
+			if ( $this->api_key != false ) {
+				$headers['Authorization'] = 'Basic ' . base64_encode( $this->username . '/token:' . $this->api_key );
+				$headers['Content-Type']  = 'application/json';
+			}
+			$headers  = array_merge( $headers, $extra_headers );
+
+			$target_url = trailingslashit( $this->api_url ) . $endpoint;
+			$result     = wp_remote_request(
+				$target_url,
+				array(
+					'method'    => 'PUT',
+					'headers'   => $headers,
+					'body'      => $put_data,
+					'sslverify' => false,
+					'user-agent' => ZENDESK_USER_AGENT,
+				)
+			);
+
+			if ( ( defined( 'WP_DEBUG' ) && WP_DEBUG ) && is_wp_error( $result ) ) {
+				$error_string = 'Zendesk API PUT Error (' . $target_url . '): ' . $result->get_error_message();
+				if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
+					echo $error_string . '<br />';
+				}
+
+				if ( class_exists( 'Zendesk_Wordpress_Logger' ) ) {
+					Zendesk_Wordpress_Logger::log( $error_string, true );
+				}
+			}
+
+			return $result;
+		}
+
+		/**
+		 * _delete function.
+		 *
+		 * @access private
+		 * @param mixed $endpoint
+		 * @param mixed $put_data (default: null)
+		 * @param array $extra_headers (default: array())
+		 * @return void
+		 */
+		private function _delete( $endpoint, $put_data = null, $extra_headers = array() ) {
+			$put_data = json_encode( $put_data );
+			$headers;
+			if ( ! $this->api_key ) {
+				$headers    = array(
+					'Authorization' => 'Basic ' . ( $altauth != false ? base64_encode( $altauth ) : base64_encode( $this->username . ':' . $this->password ) ), // '',// .
+					'Content-Type'  => 'application/json',
+				);
+			}
+
+			if ( $this->api_key != false ) {
+				$headers['Authorization'] = 'Basic ' . base64_encode( $this->username . '/token:' . $this->api_key );
+			}
+			$headers  = array_merge( $headers, $extra_headers );
+
+			$target_url = trailingslashit( $this->api_url ) . $endpoint;
+			$result     = wp_remote_request(
+				$target_url,
+				array(
+					'method'    => 'DELETE',
+					'headers'   => $headers,
+					'body'      => $put_data,
+					'sslverify' => false,
+					'user-agent' => ZENDESK_USER_AGENT,
+				)
+			);
+
+			if ( ( defined( 'WP_DEBUG' ) && WP_DEBUG ) && is_wp_error( $result ) ) {
+				$error_string = 'Zendesk API DELETE Error (' . $target_url . '): ' . $result->get_error_message();
+				if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
+					echo $error_string . '<br />';
+				}
+
+				if ( class_exists( 'Zendesk_Wordpress_Logger' ) ) {
+					Zendesk_Wordpress_Logger::log( $error_string, true );
+				}
+			}
+
+			return $result;
+		}
+
+		/*
+		 * Cache Salts (helper)
+		 *
+		 * Use this function to compose Transient API keys, prepends a zd-
+		 * and generates a salt based on the username and the api_url and
+		 * the provided postfix variable.
+		 *
+		 *
+		 * @access private
+		 * @param mixed $postfix
+		 * @return void
+		 */
+		private function _salt( $postfix ) {
+			return 'zd-' . md5( 'zendesk-' . $this->username . $this->api_url . $postfix );
+		}
+
+		/**
+		 * checker function.
+		 *
+		 * @access private
+		 * @param mixed $result
+		 * @param mixed $message
+		 * @param bool  $always_error (default: false)
+		 * @return void
+		 */
+		private function checker( $result, $message, $always_error = false ) {
+			if ( ! is_wp_error( $result ) && ($result['response']['code'] == 200 || $result['response']['code'] == 201) ) {
+				return json_decode( $result['body'] );
+			} else {
+				if ( is_wp_error( $result ) || $always_error ) {
+					return new WP_Error( 'zendesk-api-error', $message );
+				}
+			}
+			return $result; // cause probably 400 error.
 		}
 
 	}
