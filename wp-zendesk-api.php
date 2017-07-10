@@ -1163,8 +1163,166 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 					return new WP_Error( 'zendesk-api-error', $message );
 				}
 			}
-			return $result; // cause probably 400 error
+			return $result; // cause probably 400 error.
 		}
+
+		/* SUSPENDED TICKETS. */
+
+		/* TICKET AUDITS. */
+
+		/* TICKET COMMENTS. */
+
+		/* TICKET SKIPS. */
+
+		/* TICKET METRICS. */
+
+		/* TICKET METRIC EVENTS. */
+
+		/* USERS. */
+
+		/* USER IDENTITIES. */
+
+		/* CUSTOM AGENT ROLES. */
+
+		/* END USERS. */
+
+		/* GROUPS. */
+
+		/* GROUP MEMBERSHIPS. */
+
+		/* SESSIONS. */
+
+		/* ORGANIZTIONS. */
+
+		/* ORGANIZTION SUBSCRIPTIONS. */
+
+		/* ORGANIZTION MEMBERSHIPS. */
+
+		/* AUTOMATIONS. */
+
+		/* MACROS. */
+
+		/* SLA POLICIES. */
+
+		/* TARGETS. */
+
+		/* TRIGGERS. */
+
+		/* VIEWS. */
+
+		/* ACCOUNT SETTINGS. */
+
+		/* AUDIT LOGS. */
+
+		/* BRANDS. */
+
+		/* DYNAMIC CONTENT. */
+
+		/* LOCALES. */
+
+		/* ORGANIZATION FIELDS. */
+
+		/* SCHEDULES. */
+
+		/* SHARING AGREEMENTS. */
+
+		/* SUPPORT ADDRESSES. */
+
+		/* TICKET FORMS. */
+
+		/* TICKET FIELDS. */
+
+		/* USER FIELDS. */
+
+		/* APPS. */
+
+		public function upload_app_package() {
+
+		}
+
+		public function create_app() {
+
+		}
+
+		public function update_app() {
+
+		}
+
+		public function get_app_info() {
+
+		}
+
+		public function get_app_public_key() {
+
+		}
+
+		public function list_owned_apps() {
+
+		}
+
+		public function list_all_apps() {
+
+		}
+
+		public function delete_app( $app_id ) {
+
+		}
+
+		public function send_notification_to_app() {
+
+		}
+
+		public function list_app_installations() {
+
+		}
+
+		public function install_app() {
+
+		}
+
+		public function show_app_installation( $app_id ) {
+
+		}
+
+		public function update_app_installation( $app_id ) {
+
+		}
+
+		public function remove_app_installation( $app_id ) {
+
+		}
+
+		public function get_install_requirement_status( $app_id ) {
+
+		}
+
+		public function list_install_requirements( $app_id ) {
+
+		}
+
+		/* APP INSTALL LOCATIONS. */
+
+		public function list_location_installations() {
+
+		}
+
+		public function reorder_app_install_for_location() {
+
+		}
+
+		/* APP LOCATIONS. */
+
+		public function get_app_locations() {
+			// GET /api/v2/apps/locations.json
+		}
+
+		public function get_app_location( $app_location_id ) {
+
+		}
+
+		/* OAUTH CLIENTS. */
+
+		/* OAUTH TOKENS. */
 
 		/* AUTHORIZED GLOBAL CLIENTS. */
 
