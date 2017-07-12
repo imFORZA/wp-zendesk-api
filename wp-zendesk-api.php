@@ -10,19 +10,8 @@
  * GitHub Branch: master
  */
 
-/*
- * The Zendesk API Class
- *
- * Handles all the work with the Zendesk API including authentication,
- * ticket creation, listings, etc. Operates via the JSON api, thus
- * requires the json functions available in php5 (and php4 as a pear
- * library).
- *
- * @uses json_encode, json_decode
- * @uses WP_Http wrappers
- *
- */
 
+/* Check if Class Exists. */
 if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 
 
@@ -978,6 +967,54 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 
 		/* DYNAMIC CONTENT. */
 
+		public function list_dynamic_content_items() {
+
+		}
+
+		public function get_dynamic_content_item( $dc_item_id ) {
+
+		}
+
+		public function add_dynamic_content_item() {
+
+		}
+
+		public function update_dynamic_content_item( $dc_item_id ) {
+
+		}
+
+		public function delete_dynamic_content_item( $dc_item_id ) {
+
+		}
+
+		public function list_dc_item_variants() {
+
+		}
+
+		public function get_dc_item_variant() {
+
+		}
+
+		public function add_dc_item_variant() {
+
+		}
+
+		public function add_bulk_dc_item_variant() {
+
+		}
+
+		public function update_dc_item_variant() {
+
+		}
+
+		public function update_bulk_dc_item_variant() {
+
+		}
+
+		public function delete_dc_item_variant() {
+
+		}
+
 		/* LOCALES. */
 
 		/* ORGANIZATION FIELDS. */
@@ -990,9 +1027,87 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 
 		/* TICKET FORMS. */
 
+		public function get_ticket_forms() {
+
+		}
+
+		public function add_ticket_form() {
+
+		}
+
+		public function show_ticket_form() {
+
+		}
+
+		public function show_many_ticket_forms() {
+
+		}
+
+		public function update_ticket_form() {
+
+		}
+
+		public function delete_ticket_form() {
+
+		}
+
+		public function reorder_ticket_form() {
+
+		}
+
+		public function clone_existing_ticket_form() {
+
+		}
+
 		/* TICKET FIELDS. */
 
+
+
 		/* USER FIELDS. */
+
+		public function get_user_fields() {
+
+		}
+
+		public function get_user_field( $field_id ) {
+
+		}
+
+		public function add_user_field() {
+
+		}
+
+		public function update_user_field( $field_id ) {
+
+		}
+
+		public function update_dropdown_field( $field_id, $custom_field_options ) {
+
+		}
+
+		public function delete_user_field() {
+
+		}
+
+		public function reorder_user_field() {
+
+		}
+
+		public function list_user_field_options( $field_id ) {
+
+		}
+
+		public function show_user_field_option( $field_id, $option_id ) {
+
+		}
+
+		public function add_update_user_field_option( $field_id ) {
+
+		}
+
+		public function delete_user_field_option( $field_id, $option_id ) {
+
+		}
 
 		/* APPS. */
 
