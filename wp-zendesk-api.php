@@ -211,6 +211,12 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 
 		}
 
+		public function get_user_id_by_email( $email ){
+			$result = $this->_get( 'users/search.json?query=' . $email );
+
+			return $this->checker( $result, '' );
+		}
+
 
 		/* TICKETS */
 
@@ -251,6 +257,12 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 			$result = $this->_get( $request );
 
 			return $this->checker( $result, __( 'Tickets cannot be accessed right now.', 'wp-zendesk-api' ) );
+		}
+
+		public function get_tickets_by_email( $email ){
+			$result = $this->_get( 'search.json?query=type:ticket requester:' . $email );
+
+			return $this->checker( $result, '' );
 		}
 
 		// https://developer.zendesk.com/rest_api/docs/core/tickets#show-ticket
@@ -436,13 +448,18 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 		* (based on their role, where 0 is generally end-users).
 		*
 		*/
-		public function create_request( $subject, $description ) {
+		public function create_request( $subject, $description, $requester_id = '' ) {
 			$request = array(
 				'request' => array(
+					// "requester" => array( "name" => "Anonymous customer" ),
 					'subject' => $subject,
-					'comment' => array( 'body' => $description ),
+					'description' => $description,
 				),
 			);
+
+			if( $requester_id !== '' ){
+				//$request['request']['requester_id'] = $requester_id;
+			}
 
 			$headers = array();
 
@@ -599,25 +616,17 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 		 * @return void
 		 */
 		public function get_tickets_from_view( $view_id ) {
-			$transient_key = $this->_salt( 'view-' . $view_id );
 
-			if ( false === ( $tickets = get_transient( $transient_key ) ) ) {
-				$result = $this->_get( 'views/' . $view_id . '/tickets.json' );
+			$result = $this->_get( 'views/' . $view_id . '/tickets.json' );
 
-				if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
-					$tickets = json_decode( $result['body'] );
-					$tickets = $tickets->tickets;
+			if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
+				$tickets = json_decode( $result['body'] );
+				$tickets = $tickets->tickets;
 
-					set_transient( $transient_key, $tickets, $this->cache_timeout );
-
-					return $tickets;
-				} else {
-					return new WP_Error( 'zendesk-api-error', __( 'The tickets for this view could not be fetched at this time, please try again later.', 'wp-zendesk-api' ) );
-				}
+				return $tickets;
+			} else {
+				return new WP_Error( 'zendesk-api-error', __( 'The tickets for this view could not be fetched at this time, please try again later.', 'wp-zendesk-api' ) );
 			}
-
-			// Serving from cache.
-			return $tickets;
 		}
 
 		/*
@@ -1165,176 +1174,5 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 			}
 			return $result; // cause probably 400 error
 		}
-
-		/* AUTHORIZED GLOBAL CLIENTS. */
-
-		public function get_authorized_global_clients() {
-			// GET /api/v2/oauth/global_clients.json
-		}
-
-		/* ACTIVITY STREAM. */
-
-		public function list_activites() {
-
-		}
-
-		public function get_activity( $activity_id ) {
-
-		}
-
-		/* BOOKMARKS. */
-
-		public function list_bookmarks() {
-			// GET /api/v2/bookmarks.json
-		}
-
-		public function add_bookmark() {
-
-		}
-
-		public function delete_bookmark() {
-
-		}
-
-		/* JOB STATUSES. */
-
-		public function get_job_statuses() {
-			// GET /api/v2/job_statuses.json
-		}
-
-		public function get_job_status( $job_id ) {
-
-		}
-
-		public function get_bulk_job_status( $job_ids ) {
-
-		}
-
-		/* PUSH NOTIFICATION DEVICES. */
-
-		public function bulk_unregister_push_notification_devices() {
-			// POST /api/v2/push_notification_devices/destroy_many.json
-		}
-
-		/* RESOURCE COLLECTIONS. */
-
-		public function get_resource_collections() {
-			// GET /api/v2/resource_collections.json
-		}
-
-		public function get_resource_collection( $resource_collection_id ) {
-
-		}
-
-		public function add_resource_collection() {
-			// POST /api/v2/resource_collections.json
-		}
-
-		public function update_resource_collection() {
-
-		}
-
-		public function delete_resource_collection() {
-
-		}
-
-		/* TAGS. */
-
-		public function get_tags() {
-			// GET /api/v2/tags.json
-		}
-
-		public function get_tickets_tags( $ticket_id ) {
-			// GET /api/v2/tickets/{id}/tags.json
-		}
-
-		public function get_topics_tags( $topic_id ) {
-			// GET /api/v2/topics/{id}/tags.json
-		}
-
-		public function get_org_tags( $org_id ) {
-			// GET /api/v2/organizations/{id}/tags.json
-		}
-
-		public function get_user_tags( $user_id ) {
-			// GET /api/v2/users/{id}/tags.json
-		}
-
-		public function set_ticket_tags( $ticket_id ) {
-
-		}
-
-		public function set_topic_tags( $topic_id ) {
-
-		}
-
-		public function set_org_tags( $org_id ) {
-
-		}
-
-		public function set_users_tags( $user_id ) {
-
-		}
-
-		public function add_ticket_tags( $ticket_id ) {
-
-		}
-
-		public function add_topic_tags( $topic_id ) {
-
-		}
-
-		public function add_org_tags( $org_id ) {
-
-		}
-
-		public function add_users_tags( $user_id ) {
-
-		}
-
-		public function remove_ticket_tags( $ticket_id ) {
-
-		}
-
-		public function remove_topic_tags( $topic_id ) {
-
-		}
-
-		public function remove_org_tags( $org_id ) {
-
-		}
-
-		public function remove_users_tags( $user_id ) {
-
-		}
-
-		public function get_autocomplete_tags( $name ) {
-			// GET /api/v2/autocomplete/tags.json?name={name}
-		}
-
-		/* CHANNEL FRAMEWORK. */
-
-		public function push_channel_framework() {
-			// POST /api/v2/any_channel/push
-		}
-
-		/* TWITTER CHANNEL. */
-
-		public function list_monitored_twitter_handles() {
-			// GET /api/v2/channels/twitter/monitored_twitter_handles.json
-		}
-
-		public function get_monitored_twitter_handle( $twitter_monitor_handle_id ) {
-			// GET /api/v2/channels/twitter/monitored_twitter_handles/{id}.json
-		}
-
-		public function create_ticket_from_tweet() {
-			// POST /api/v2/channels/twitter/tickets.json
-		}
-
-		public function get_twicket_status( $twicket_id ) {
-			// GET /api/v2/channels/twitter/tickets/{id}/statuses.json
-		}
-
 	}
 }
