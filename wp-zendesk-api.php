@@ -10,19 +10,8 @@
  * GitHub Branch: master
  */
 
-/*
- * The Zendesk API Class
- *
- * Handles all the work with the Zendesk API including authentication,
- * ticket creation, listings, etc. Operates via the JSON api, thus
- * requires the json functions available in php5 (and php4 as a pear
- * library).
- *
- * @uses json_encode, json_decode
- * @uses WP_Http wrappers
- *
- */
 
+/* Check if Class Exists. */
 if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 
 
@@ -214,6 +203,7 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 		public function get_user_id_by_email( $email ){
 			$result = $this->_get( 'users/search.json?query=' . $email );
 
+			// return $result;
 			return $this->checker( $result, '' );
 		}
 
@@ -839,64 +829,11 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 			return $this->checker( $result, __( 'Password cannot be set right now.', 'wp-zendesk-api' ) );
 		}
 
-		/* GROUPS */
 
 
 		/* TICKET FIELDS */
 
-		/**
-		 * list_groups function.
-		 *
-		 * @access public
-		 * @return void
-		 */
-		public function list_groups() {
-			$result = $this->_get( 'groups.json' );
 
-			return $this->checker( $result, __( 'Users cannot be accessed right now.', 'wp-zendesk-api' ) );
-		}
-
-		/**
-		 * show_group function.
-		 *
-		 * @access public
-		 * @param mixed $group_id
-		 * @return void
-		 */
-		public function show_group( $group_id ) {
-			$result = $this->_get( 'groups/' . $user_id . '.json' );
-
-			if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
-				$user = json_decode( $result['body'] );
-				set_transient( $transient_key, $user, $this->cache_timeout_user );
-
-				return $user;
-			} else {
-				return new WP_Error( 'zendesk-api-error', __( 'The requested user details could not be fetched at this time, please try again later.', 'wp-zendesk-api' ) );
-			}
-		}
-
-		/**
-		 * update_groups function.
-		 *
-		 * @access public
-		 * @param mixed $stuff
-		 * @return void
-		 */
-		public function update_groups( $stuff ) {
-
-		}
-
-		/**
-		 * delete_group function.
-		 *
-		 * @access public
-		 * @param mixed $group_id
-		 * @return void
-		 */
-		public function delete_group( $group_id ) {
-
-		}
 
 
 		/**
@@ -932,8 +869,518 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 			return $fields;
 		}
 
-		/* HELPER FUNCTIONS */
 
+
+		/* SUSPENDED TICKETS. */
+
+		/* TICKET AUDITS. */
+
+		/* TICKET COMMENTS. */
+
+		/* TICKET SKIPS. */
+
+		/* TICKET METRICS. */
+
+		/* TICKET METRIC EVENTS. */
+
+		/* USERS. */
+
+		/* USER IDENTITIES. */
+
+		/* CUSTOM AGENT ROLES. */
+
+		/* END USERS. */
+
+		/* GROUPS. */
+
+				/**
+		 * list_groups function.
+		 *
+		 * @access public
+		 * @return void
+		 */
+		public function list_groups() {
+			$result = $this->_get( 'groups.json' );
+
+			return $this->checker( $result, __( 'Users cannot be accessed right now.', 'wp-zendesk-api' ) );
+		}
+
+		/**
+		 * Show Group.
+		 *
+		 * @access public
+		 * @param mixed $group_id Group ID.
+		 * @return void
+		 */
+		public function show_group( $group_id ) {
+			$result = $this->_get( 'groups/' . $user_id . '.json' );
+
+			if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
+				$user = json_decode( $result['body'] );
+				set_transient( $transient_key, $user, $this->cache_timeout_user );
+
+				return $user;
+			} else {
+				return new WP_Error( 'zendesk-api-error', __( 'The requested user details could not be fetched at this time, please try again later.', 'wp-zendesk-api' ) );
+			}
+		}
+
+		/**
+		 * Update Groups.
+		 *
+		 * @access public
+		 * @param mixed $stuff Stuff.
+		 * @return void
+		 */
+		public function update_groups( $stuff ) {
+
+		}
+
+		/**
+		 * Delete Group.
+		 *
+		 * @access public
+		 * @param mixed $group_id
+		 * @return void
+		 */
+		public function delete_group( $group_id ) {
+
+		}
+
+		/* GROUP MEMBERSHIPS. */
+
+		/* SESSIONS. */
+
+		/* ORGANIZTIONS. */
+
+		/* ORGANIZTION SUBSCRIPTIONS. */
+
+		/* ORGANIZTION MEMBERSHIPS. */
+
+		/* AUTOMATIONS. */
+
+		/* MACROS. */
+
+		/* SLA POLICIES. */
+
+		/* TARGETS. */
+
+		/* TRIGGERS. */
+
+		/* VIEWS. */
+
+		/* ACCOUNT SETTINGS. */
+
+		/* AUDIT LOGS. */
+
+		/* BRANDS. */
+
+		/* DYNAMIC CONTENT. */
+
+		public function list_dynamic_content_items() {
+
+		}
+
+		public function get_dynamic_content_item( $dc_item_id ) {
+
+		}
+
+		public function add_dynamic_content_item() {
+
+		}
+
+		public function update_dynamic_content_item( $dc_item_id ) {
+
+		}
+
+		public function delete_dynamic_content_item( $dc_item_id ) {
+
+		}
+
+		public function list_dc_item_variants() {
+
+		}
+
+		public function get_dc_item_variant() {
+
+		}
+
+		public function add_dc_item_variant() {
+
+		}
+
+		public function add_bulk_dc_item_variant() {
+
+		}
+
+		public function update_dc_item_variant() {
+
+		}
+
+		public function update_bulk_dc_item_variant() {
+
+		}
+
+		public function delete_dc_item_variant() {
+
+		}
+
+		/* LOCALES. */
+
+		/* ORGANIZATION FIELDS. */
+
+		/* SCHEDULES. */
+
+		/* SHARING AGREEMENTS. */
+
+		/* SUPPORT ADDRESSES. */
+
+		/* TICKET FORMS. */
+
+		public function get_ticket_forms() {
+
+		}
+
+		public function add_ticket_form() {
+
+		}
+
+		public function show_ticket_form() {
+
+		}
+
+		public function show_many_ticket_forms() {
+
+		}
+
+		public function update_ticket_form() {
+
+		}
+
+		public function delete_ticket_form() {
+
+		}
+
+		public function reorder_ticket_form() {
+
+		}
+
+		public function clone_existing_ticket_form() {
+
+		}
+
+		/* TICKET FIELDS. */
+
+
+
+		/* USER FIELDS. */
+
+		public function get_user_fields() {
+
+		}
+
+		public function get_user_field( $field_id ) {
+
+		}
+
+		public function add_user_field() {
+
+		}
+
+		public function update_user_field( $field_id ) {
+
+		}
+
+		public function update_dropdown_field( $field_id, $custom_field_options ) {
+
+		}
+
+		public function delete_user_field() {
+
+		}
+
+		public function reorder_user_field() {
+
+		}
+
+		public function list_user_field_options( $field_id ) {
+
+		}
+
+		public function show_user_field_option( $field_id, $option_id ) {
+
+		}
+
+		public function add_update_user_field_option( $field_id ) {
+
+		}
+
+		public function delete_user_field_option( $field_id, $option_id ) {
+
+		}
+
+		/* APPS. */
+
+		public function upload_app_package() {
+
+		}
+
+		public function create_app() {
+
+		}
+
+		public function update_app() {
+
+		}
+
+		public function get_app_info() {
+
+		}
+
+		public function get_app_public_key() {
+
+		}
+
+		public function list_owned_apps() {
+
+		}
+
+		public function list_all_apps() {
+
+		}
+
+		public function delete_app( $app_id ) {
+
+		}
+
+		public function send_notification_to_app() {
+
+		}
+
+		public function list_app_installations() {
+
+		}
+
+		public function install_app() {
+
+		}
+
+		public function show_app_installation( $app_id ) {
+
+		}
+
+		public function update_app_installation( $app_id ) {
+
+		}
+
+		public function remove_app_installation( $app_id ) {
+
+		}
+
+		public function get_install_requirement_status( $app_id ) {
+
+		}
+
+		public function list_install_requirements( $app_id ) {
+
+		}
+
+		/* APP INSTALL LOCATIONS. */
+
+		public function list_location_installations() {
+
+		}
+
+		public function reorder_app_install_for_location() {
+
+		}
+
+		/* APP LOCATIONS. */
+
+		public function get_app_locations() {
+			// GET /api/v2/apps/locations.json
+		}
+
+		public function get_app_location( $app_location_id ) {
+
+		}
+
+		/* OAUTH CLIENTS. */
+
+		/* OAUTH TOKENS. */
+
+		/* AUTHORIZED GLOBAL CLIENTS. */
+
+		public function get_authorized_global_clients() {
+			// GET /api/v2/oauth/global_clients.json
+		}
+
+		/* ACTIVITY STREAM. */
+
+		public function list_activites() {
+
+		}
+
+		public function get_activity( $activity_id ) {
+
+		}
+
+		/* BOOKMARKS. */
+
+		public function list_bookmarks() {
+			// GET /api/v2/bookmarks.json
+		}
+
+		public function add_bookmark() {
+
+		}
+
+		public function delete_bookmark() {
+
+		}
+
+		/* JOB STATUSES. */
+
+		public function get_job_statuses() {
+			// GET /api/v2/job_statuses.json
+		}
+
+		public function get_job_status( $job_id ) {
+
+		}
+
+		public function get_bulk_job_status( $job_ids ) {
+
+		}
+
+		/* PUSH NOTIFICATION DEVICES. */
+
+		public function bulk_unregister_push_notification_devices() {
+			// POST /api/v2/push_notification_devices/destroy_many.json
+		}
+
+		/* RESOURCE COLLECTIONS. */
+
+		public function get_resource_collections() {
+			// GET /api/v2/resource_collections.json
+		}
+
+		public function get_resource_collection( $resource_collection_id ) {
+
+		}
+
+		public function add_resource_collection() {
+			// POST /api/v2/resource_collections.json
+		}
+
+		public function update_resource_collection() {
+
+		}
+
+		public function delete_resource_collection() {
+
+		}
+
+		/* TAGS. */
+
+		public function get_tags() {
+			// GET /api/v2/tags.json
+		}
+
+		public function get_tickets_tags( $ticket_id ) {
+			// GET /api/v2/tickets/{id}/tags.json
+		}
+
+		public function get_topics_tags( $topic_id ) {
+			// GET /api/v2/topics/{id}/tags.json
+		}
+
+		public function get_org_tags( $org_id ) {
+			// GET /api/v2/organizations/{id}/tags.json
+		}
+
+		public function get_user_tags( $user_id ) {
+			// GET /api/v2/users/{id}/tags.json
+		}
+
+		public function set_ticket_tags( $ticket_id ) {
+
+		}
+
+		public function set_topic_tags( $topic_id ) {
+
+		}
+
+		public function set_org_tags( $org_id ) {
+
+		}
+
+		public function set_users_tags( $user_id ) {
+
+		}
+
+		public function add_ticket_tags( $ticket_id ) {
+
+		}
+
+		public function add_topic_tags( $topic_id ) {
+
+		}
+
+		public function add_org_tags( $org_id ) {
+
+		}
+
+		public function add_users_tags( $user_id ) {
+
+		}
+
+		public function remove_ticket_tags( $ticket_id ) {
+
+		}
+
+		public function remove_topic_tags( $topic_id ) {
+
+		}
+
+		public function remove_org_tags( $org_id ) {
+
+		}
+
+		public function remove_users_tags( $user_id ) {
+
+		}
+
+		public function get_autocomplete_tags( $name ) {
+			// GET /api/v2/autocomplete/tags.json?name={name}
+		}
+
+		/* CHANNEL FRAMEWORK. */
+
+		public function push_channel_framework() {
+			// POST /api/v2/any_channel/push
+		}
+
+		/* TWITTER CHANNEL. */
+
+		public function list_monitored_twitter_handles() {
+			// GET /api/v2/channels/twitter/monitored_twitter_handles.json
+		}
+
+		public function get_monitored_twitter_handle( $twitter_monitor_handle_id ) {
+			// GET /api/v2/channels/twitter/monitored_twitter_handles/{id}.json
+		}
+
+		public function create_ticket_from_tweet() {
+			// POST /api/v2/channels/twitter/tickets.json
+		}
+
+		public function get_twicket_status( $twicket_id ) {
+			// GET /api/v2/channels/twitter/tickets/{id}/statuses.json
+		}
+
+
+			/* HELPER FUNCTIONS */
 
 		/**
 		 * API Get.
@@ -953,8 +1400,13 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 				);
 			}
 
+
+
 			if ( $this->api_key != false ) {
-				$headers['Authorization'] = 'Basic ' . base64_encode( $this->username . '/token:' . $this->api_key );
+				$headers = array(
+					'Authorization' => 'Basic ' . base64_encode( $this->username . '/token:' . $this->api_key ),
+					'Content-Type' 	=> 'application/json',
+				);
 			}
 
 			$target_url = trailingslashit( $this->api_url ) . $endpoint;
@@ -997,6 +1449,7 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 		private function _post( $endpoint, $post_data = null, $extra_headers = array() ) {
 
 			$post_data  = json_encode( $post_data );
+			error_log( $post_data );
 			$headers;
 			if ( ! $this->api_key ) {
 				$headers    = array(
@@ -1006,10 +1459,18 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 			}
 
 			if ( $this->api_key != false ) {
-				$headers['Authorization'] = 'Basic ' . base64_encode( $this->username . '/token:' . $this->api_key );
+				$headers = array(
+					'Authorization' => 'Basic ' . base64_encode( $this->username . '/token:' . $this->api_key ),
+					'Content-Type' 	=> 'application/json',
+				);
 			}
+
+
+
 			$headers    = array_merge( $headers, $extra_headers );
 			$target_url = trailingslashit( $this->api_url ) . $endpoint;
+			error_log( print_r( $headers, true ) );
+			error_log( $target_url );
 			$result     = wp_remote_post(
 				$target_url,
 				array(
@@ -1172,7 +1633,7 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 					return new WP_Error( 'zendesk-api-error', $message );
 				}
 			}
-			return $result; // cause probably 400 error
+			return $result; // cause probably 400 error.
 		}
 	}
 }
