@@ -1449,7 +1449,6 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 		private function _post( $endpoint, $post_data = null, $extra_headers = array() ) {
 
 			$post_data  = json_encode( $post_data );
-			error_log( $post_data );
 			$headers;
 			if ( ! $this->api_key ) {
 				$headers    = array(
@@ -1469,8 +1468,6 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 
 			$headers    = array_merge( $headers, $extra_headers );
 			$target_url = trailingslashit( $this->api_url ) . $endpoint;
-			error_log( print_r( $headers, true ) );
-			error_log( $target_url );
 			$result     = wp_remote_post(
 				$target_url,
 				array(
