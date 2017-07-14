@@ -1568,6 +1568,7 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 
 			if ( $this->api_key != false ) {
 				$headers['Authorization'] = 'Basic ' . base64_encode( $this->username . '/token:' . $this->api_key );
+				$headers['Content-Type']  = 'application/json';
 			}
 			$headers  = array_merge( $headers, $extra_headers );
 
