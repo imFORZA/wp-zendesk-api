@@ -294,9 +294,11 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 		 * new ticket is authored by the currently set user, i.e. the
 		 * credentials stored in the private variables of this class.
 		 *
+		 * @param $tags array of tags.
+		 *
 		 * @return int ID of ticket after submission
 		 */
-		public function create_ticket( $subject, $description, $requester_name = false, $requester_email = false ) {
+		public function create_ticket( $subject, $description, $requester_name = '', $requester_email = '', $tags = '' ) {
 			$ticket = array(
 				'ticket' => array(
 					'subject' => $subject,
@@ -306,11 +308,15 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 				),
 			);
 
-			if ( $requester_name && $requester_email ) {
+			if ( $requester_name != '' && $requester_email != '' ) { // eh... might wanna make this an or? iunno good enough.
 				$ticket['ticket']['requester'] = array(
-					'name'  => $requester_name,
+					'name'  => $requester_name, // not really that important of a field tbh.
 					'email' => $requester_email,
 				);
+			}
+
+			if( $tags != '' ){
+				$ticket['ticket']['tags'] = implode(',', $tags);
 			}
 
 			$result = $this->_post( 'tickets.json', $ticket );
