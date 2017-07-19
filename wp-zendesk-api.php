@@ -298,7 +298,7 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 		 *
 		 * @return int ID of ticket after submission
 		 */
-		public function create_ticket( $subject, $description, $requester_name = '', $requester_email = '', $tags = '' ) {
+		public function create_ticket( $subject, $description, $requester_name = '', $requester_email = '', $tags = '', $channel = '' ) {
 			$ticket = array(
 				'ticket' => array(
 					'subject' => $subject,
@@ -319,7 +319,15 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 				$ticket['ticket']['tags'] = implode(',', $tags);
 			}
 
+			if( $channel != '' ){
+				$ticket['ticket']['via']['channel'] = $channel;
+			}
+
+			error_log(print_r( $ticket, true ));
+
 			$result = $this->_post( 'tickets.json', $ticket );
+
+			error_log(print_r( $result, true ));
 
 			if ( ! is_wp_error( $result ) && $result['response']['code'] == 201 ) {
 				$location = $result['headers']['location'];
@@ -1469,6 +1477,8 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 					'Content-Type' 	=> 'application/json',
 				);
 			}
+
+			error_log(print_r( $headers, true ));
 
 
 
