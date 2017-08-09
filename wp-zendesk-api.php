@@ -255,6 +255,12 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 			return $this->checker( $result, '' );
 		}
 
+		public function get_tickets_by_user_id( $user_id ){
+			$result = $this->_get( 'search.json?query=type:ticket requester:' . $user_id );
+
+			return $this->checker( $result, '' );
+		}
+
 		// https://developer.zendesk.com/rest_api/docs/core/tickets#show-ticket
 		/**
 		 * show_ticket function.
@@ -965,11 +971,66 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 
 		/* SESSIONS. */
 
-		/* ORGANIZTIONS. */
+		/* ORGANIZATIONS. */
 
-		/* ORGANIZTION SUBSCRIPTIONS. */
+		public function show_organization( $org_id = '' ){
+			return $this->checker( $this->_get( 'organizations/' . $org_id . '.json' ), '');
+		}
 
-		/* ORGANIZTION MEMBERSHIPS. */
+		public function list_organizations( $user_id = '', $page = '' ) {
+			$result;
+			$page;
+			if ( $page != '' ) {
+				$page = '?page=' . $page;
+			}else{
+				$page = '';
+			}
+
+			if( $user_id != '' ){
+				$result = $this->_get( "users/$user_id/organizations.json" . $page );
+			}else{
+				$result = $this->_get( "organizations.json" . $page );
+			}
+
+			return $this->checker( $result, __( 'Users cannot be accessed right now.', 'wp-zendesk-api' ) );
+		}
+
+		public function delete_organizations( $org_id, $testmode = false ){
+
+			if( $testmode ){
+				return array( 'members' => $this->list_organization_memberships( $org_id ), 'id' => $org_id );
+			}
+
+			$result = $this->_delete( 'organizations/' . $org_id . '.json' );
+
+			return $this->checker( $result, __( 'Org cannot be deleted right now.', 'wp-zendesk-api' ) );
+
+		}
+
+		/* ORGANIZATION SUBSCRIPTIONS. */
+
+		/* ORGANIZATION MEMBERSHIPS. */
+
+		public function list_organization_memberships( $org_id = '', $user_id = '', $page = '' ) {
+			$result;
+			$page;
+			if ( $page != '' ) {
+				$page = '?page=' . $page;
+			}else{
+				$page = '';
+			}
+
+			if( $user_id != '' ){
+				$result = $this->_get( "users/$user_id/organization_memberships.json" . $page );
+			}else if( $org_id != '' ){
+				$result = $this->_get( "organizations/$org_id/organization_memberships.json" . $page );
+			}else{
+				$result = $this->_get( "organization_memberships.json" . $page );
+			}
+
+			return $this->checker( $result, __( 'Memberships cannot be accessed right now.', 'wp-zendesk-api' ) );
+
+		}
 
 		/* AUTOMATIONS. */
 
@@ -1212,7 +1273,7 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 		/* APP LOCATIONS. */
 
 		public function get_app_locations() {
-			// GET /api/v2/apps/locations.json
+			// GET apps/locations.json
 		}
 
 		public function get_app_location( $app_location_id ) {
@@ -1226,7 +1287,7 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 		/* AUTHORIZED GLOBAL CLIENTS. */
 
 		public function get_authorized_global_clients() {
-			// GET /api/v2/oauth/global_clients.json
+			// GET oauth/global_clients.json
 		}
 
 		/* ACTIVITY STREAM. */
@@ -1242,7 +1303,7 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 		/* BOOKMARKS. */
 
 		public function list_bookmarks() {
-			// GET /api/v2/bookmarks.json
+			// GET bookmarks.json
 		}
 
 		public function add_bookmark() {
@@ -1256,7 +1317,7 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 		/* JOB STATUSES. */
 
 		public function get_job_statuses() {
-			// GET /api/v2/job_statuses.json
+			// GET job_statuses.json
 		}
 
 		public function get_job_status( $job_id ) {
@@ -1270,13 +1331,13 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 		/* PUSH NOTIFICATION DEVICES. */
 
 		public function bulk_unregister_push_notification_devices() {
-			// POST /api/v2/push_notification_devices/destroy_many.json
+			// POST push_notification_devices/destroy_many.json
 		}
 
 		/* RESOURCE COLLECTIONS. */
 
 		public function get_resource_collections() {
-			// GET /api/v2/resource_collections.json
+			// GET resource_collections.json
 		}
 
 		public function get_resource_collection( $resource_collection_id ) {
@@ -1284,7 +1345,7 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 		}
 
 		public function add_resource_collection() {
-			// POST /api/v2/resource_collections.json
+			// POST resource_collections.json
 		}
 
 		public function update_resource_collection() {
@@ -1298,23 +1359,25 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 		/* TAGS. */
 
 		public function get_tags() {
-			// GET /api/v2/tags.json
+			return $this->_get( 'tags.json' );
+			// GET tags.json
 		}
 
 		public function get_tickets_tags( $ticket_id ) {
-			// GET /api/v2/tickets/{id}/tags.json
+			return $this->_get( "/tickets/$ticket_id/tags.json");
+			// GET tickets/{id}/tags.json
 		}
 
 		public function get_topics_tags( $topic_id ) {
-			// GET /api/v2/topics/{id}/tags.json
+			// GET topics/{id}/tags.json
 		}
 
 		public function get_org_tags( $org_id ) {
-			// GET /api/v2/organizations/{id}/tags.json
+			// GET organizations/{id}/tags.json
 		}
 
 		public function get_user_tags( $user_id ) {
-			// GET /api/v2/users/{id}/tags.json
+			// GET users/{id}/tags.json
 		}
 
 		public function set_ticket_tags( $ticket_id ) {
@@ -1351,46 +1414,85 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 
 		public function remove_ticket_tags( $ticket_id ) {
 
+			$request = array(
+				'ticket' => array(
+					'tags' => array(),
+				),
+			);
+
+			$result = $this->_put( 'tickets/' . $ticket_id . '.json', $request );
+
+			return $this->checker( $result, '' );
+
+			// return $this->_delete( 'tickets/' . $ticket_id . '/tags.json' );
 		}
 
 		public function remove_topic_tags( $topic_id ) {
-
+			return $this->checker( $this->_delete( 'topics/' . $topic_id . '/tags.json' ), '');
 		}
 
-		public function remove_org_tags( $org_id ) {
+		public function remove_org_tags( $org_id, $fix_domains = false ) {
+			$request = array(
+				'organization' => array(
+					'tags' => array(),
+				),
+			);
 
+			if( $fix_domains ) {
+
+				$org = $this->show_organization( $org_id );
+
+				$new_domains = array();
+
+				$domains = $org->organization->domain_names;
+
+				foreach( $domains as $domain ){
+					if( !(preg_match("/^([a-z\d](-*[a-z\d])*)(\.([a-z\d](-*[a-z\d])*))*$/i", $domain) ) ){
+						array_push( $new_domains, parse_url( $domain, PHP_URL_HOST ) );
+						pp( "Changing domain #$org_id from $domain" );
+					}else{
+						array_push( $new_domains, $domain );
+					}
+				}
+
+				$request['organization']['domain_names'] = $new_domains;
+			}
+
+			$result = $this->_put( 'organizations/' . $org_id . '.json', $request );
+
+			return $this->checker( $result, '' );
 		}
 
 		public function remove_users_tags( $user_id ) {
-
+			return $this->_delete( 'users/' . $user_id . '/tags.json' );
 		}
 
 		public function get_autocomplete_tags( $name ) {
-			// GET /api/v2/autocomplete/tags.json?name={name}
+			// GET autocomplete/tags.json?name={name}
 		}
 
 		/* CHANNEL FRAMEWORK. */
 
 		public function push_channel_framework() {
-			// POST /api/v2/any_channel/push
+			// POST any_channel/push
 		}
 
 		/* TWITTER CHANNEL. */
 
 		public function list_monitored_twitter_handles() {
-			// GET /api/v2/channels/twitter/monitored_twitter_handles.json
+			// GET channels/twitter/monitored_twitter_handles.json
 		}
 
 		public function get_monitored_twitter_handle( $twitter_monitor_handle_id ) {
-			// GET /api/v2/channels/twitter/monitored_twitter_handles/{id}.json
+			// GET channels/twitter/monitored_twitter_handles/{id}.json
 		}
 
 		public function create_ticket_from_tweet() {
-			// POST /api/v2/channels/twitter/tickets.json
+			// POST channels/twitter/tickets.json
 		}
 
 		public function get_twicket_status( $twicket_id ) {
-			// GET /api/v2/channels/twitter/tickets/{id}/statuses.json
+			// GET channels/twitter/tickets/{id}/statuses.json
 		}
 
 
@@ -1413,8 +1515,6 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 					'Content-Type'  => 'application/json',
 				);
 			}
-
-
 
 			if ( $this->api_key != false ) {
 				$headers = array(
