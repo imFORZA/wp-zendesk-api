@@ -786,6 +786,21 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 			return $this->checker( $result, __( 'Tickets cannot be accessed right now.', 'wp-zendesk-api' ) );
 		}
 
+		/**
+		 * Merge users
+		 */
+		public function merge_users( $foundation, $to_delete ){
+			$request = array(
+				'user' => array(
+					'id' => $foundation,
+				),
+			);
+
+			$result = $this->_put( 'users/' . $to_delete . '/merge.json', $request );
+
+			return $this->checker( $result, '' );
+		}
+
 		// https://developer.zendesk.com/rest_api/docs/core/users#create-user
 		/**
 		 * create_user function.
@@ -906,6 +921,9 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 		/* USERS. */
 
 		/* USER IDENTITIES. */
+		public function list_identities( $user_id ){
+			return $this->checker( $this->_get( 'users/' . $user_id . '/identities.json' ), '' );
+		}
 
 		/* CUSTOM AGENT ROLES. */
 
@@ -1444,18 +1462,20 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 
 				$new_domains = array();
 
-				$domains = $org->organization->domain_names;
+				if( isset( $org->organization ) ){
+					$domains = $org->organization->domain_names;
 
-				foreach( $domains as $domain ){
-					if( !(preg_match("/^([a-z\d](-*[a-z\d])*)(\.([a-z\d](-*[a-z\d])*))*$/i", $domain) ) ){
-						array_push( $new_domains, parse_url( $domain, PHP_URL_HOST ) );
-						pp( "Changing domain #$org_id from $domain" );
-					}else{
-						array_push( $new_domains, $domain );
+					foreach( $domains as $domain ){
+						if( !(preg_match("/^([a-z\d](-*[a-z\d])*)(\.([a-z\d](-*[a-z\d])*))*$/i", $domain) ) ){
+							array_push( $new_domains, parse_url( $domain, PHP_URL_HOST ) );
+							pp( "Changing domain #$org_id from $domain" );
+						}else{
+							array_push( $new_domains, $domain );
+						}
 					}
-				}
 
-				$request['organization']['domain_names'] = $new_domains;
+					$request['organization']['domain_names'] = $new_domains;
+				}
 			}
 
 			$result = $this->_put( 'organizations/' . $org_id . '.json', $request );
