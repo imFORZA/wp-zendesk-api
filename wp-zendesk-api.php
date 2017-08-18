@@ -41,7 +41,7 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
     }
 
     protected function run( $route, $args = array(), $method = 'GET' ){
-      return $this->build_request( $route, $argrs, $method )->fetch();
+      return $this->build_request( '/' . $route . '.json', $args, $method )->fetch();
     }
 
     protected function clear(){
@@ -49,36 +49,83 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
     }
 
     public function search( $search_string ){
-      return $this->run( "/search.json", array( 'query' => $search_string ) );
+      return $this->run( "search", array( 'query' => $search_string ) );
     }
+
+		// Useful search functions
+		public function get_tickets_by_email( $email ){
+			return $this->run( 'search', array( 'query', 'type:ticket reqeuster:'. $email ) );
+		}
+
+		public function get_user_id_by_email( $email ){
+			return $this->run( 'users/search', array( 'query' => $email ) );
+		}
+
+		public function get_requests_by_user( $email ) {
+			return $this->run( 'requests/search', array( 'query' => urlencode( 'requester:' . $email ) ) );
+		}
 
     /* Tickets */
 
     public function list_tickets(){
-      return $this->run( "/tickets.json" );
+      return $this->run( "tickets" );
     }
 
     public function show_ticket( $ticket_id ){
-
+			return $this->run( "tickets/$ticket_id" );
     }
 
-    public function show_multiple_tickets(){
-
+		// Ids -> Comma separated list or array of ticket IDs to return
+    public function show_tickets( $ids){
+			if( is_array( $ids ) ){
+				$ids = implode( $ids, ',' );
+			}
+			return $this->run( "tickets/show_many", array( 'ids' => $ids ) );
     }
 
-    public function create_ticket(){
+		public function build_zendesk_ticket( $subject, $description, $requester_name = '', $requester_email = '', $tags = '', $channel = '' ){
+			$ticket = array(
+				'ticket' => array(
+					'subject' => $subject,
+					'comment' => array(
+						'body' => $description,
+					),
+				),
+			);
 
+			if( $tags != '' ){
+				$ticket['ticket']['tags'] = implode(',', $tags);
+			}
+
+			if( $channel != '' ){
+				$ticket['ticket']['via']['channel'] = $channel;
+			}
+
+			return $ticket;
+		}
+
+		// Ticket could be a ticket, or it could be the subject. If it's the subject, a ticket will be built off of it.
+    public function create_ticket( $ticket, $description = '', $requester_name = '', $requester_email = '', $tags = '', $channel = '' ){
+
+			if( gettype( $ticket ) !== 'object' || gettype( $ticket ) !== 'array' ){
+				$ticket = $this->build_zendesk_ticket( $subject, $description, $requester_name, $requester_email, $tags, $channel );
+			}
+
+			return $this->run( 'tickets', $ticket, 'POST' );
     }
 
-    public function create_many_tickets(){
-
+		// Array of ticket objects.
+    public function create_many_tickets( $ticket_objs ){
+			return $this->run( 'tickets/create_many', array( 'tickets' => $ticket_objs ), 'POST' );
     }
 
-    public function update_ticket(){
-
+		// All properties are optional
+    public function update_ticket( $ticket_id, $ticket_obj ){
+			return $this->run( 'tickets/' . $ticket_id, $ticket_obj, 'PUT' );
     }
 
-    public function update_many_tickets(){
+		// eh, todo.
+    public function update_many_tickets( ){
 
     }
 
@@ -122,12 +169,11 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 
     }
 
-    public function delete_ticket(){
-
+    public function delete_ticket( $ticket_id ){
+			return $this->run( "tickets/$ticket_id", array(), 'DELETE' );
     }
 
     public function bulk_delete_tickets(){
-
     }
 
     public function show_delete_tickets(){
@@ -175,23 +221,50 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
     /* Requests */
 
     public function list_requests(){
-
+			return $this->run( 'requests' );
     }
 
     public function search_requests(){
 
     }
 
-    public function show_request(){
-
+    public function show_request( $request_id ){
+			return $this->run( 'requests/' . $request_id );
     }
 
-    public function create_request(){
+		public function build_zendesk_request( $subject = '', $description = '', $comment = '', $status = '', $requester_id = '' ){
+			$request = array(
+				'request' => array()
+			);
 
+			if( $subject != '' ){
+				$request['request']['subject'] = $subject;
+			}
+			if( $description != '' ){
+				$request['request']['description'] = $description;
+			}
+			if( $comment != '' ){
+				$request['request']['comment']['body'] = $comment;
+			}
+			if( $status != '' ){
+				$request['request']['status'] = $status;
+			}
+			if( $requester_id != '' ){
+				$request['request']['requester_id'] = $requester_id;
+			}
+
+			return $request;
+		}
+
+		// Call build request, must fill out subject and description, should fill out requester
+    public function create_request( $request ){
+			return $this->run( 'requests', $request, 'POST' );
     }
 
-    public function update_request(){
-
+		// Call build_request, recommended fill out comment, can fill out status
+		// This function is mostly used for adding a comment.
+    public function update_request( $request_id, $request ){
+			return $this->run( 'requests/' . $request_id, $request, 'PUT' );
     }
 
     public function set_collaborators_request(){
@@ -306,12 +379,25 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 
     /* Ticket Comments */
 
-    public function create_ticket_comment(){
+    public function create_ticket_comment( $ticket_id, $text, $public = true ){
+			$ticket = $this->build_zendesk_ticket();
 
+			$ticket['comment'] = array(
+				'public' => $public,
+				'body' => $text,
+			);
+
+			return $this->run( 'tickets/' . $ticket_id, $ticket, 'PUT' );
     }
 
-    public function list_comments(){
+		public function create_request_comment( $request_id, $text ){
+			$request = $this->build_zendesk_request( '', '', $text );
 
+			return $this->run( 'requests/' . $request_id, $request, 'PUT' );
+		}
+
+    public function list_comments( $ticket_id ){
+			return $this->run( "tickets/$ticket_id/comments" ); // might need to do a json_decode? TODO: look into
     }
 
     public function redact_string_in_comment(){
@@ -338,6 +424,76 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 
     /* Users */
 
+		public function list_users( $id = '', $is_group = true, $page = '' ){
+			$options = array();
+
+			if ( $page != '' ) {
+				$options = array( 'page' => $page );
+			}
+
+			if( $id != '' ){
+				if( $is_group ){
+					return $this->run( "groups/$id/users", $options );
+				}else{
+					return $this->run( "organizations/$id/users", $options );
+				}
+			}
+
+			return $this->run( "users", $options );
+		}
+
+		public function show_user( $user_id ){
+			return $this->run( "users/$user_id" );
+		}
+
+		// Either a comma separated list, or an array of IDs.
+		public function show_users( $user_ids ){
+			if( is_array( $user_ids ) ){
+				$user_ids = implode( $user_ids, ',' );
+			}
+
+			return $this->run( "users/show_many", array( 'ids' => $user_ids ) );
+		}
+
+		public function get_user_info( $user_id ){
+			return $this->run( "users/$user_id/related" );
+		}
+
+		public function build_zendesk_user( $name = '', $email = '', $role = '', $other = array() ){
+			$user = array( 'user' => array() );
+
+			if( $name != '' ){
+				$user['user']['name'] = $name;
+			}
+			if( $email != '' ){
+				$user['user']['email'] = $email;
+			}
+			if( $role != '' ){
+				$user['user']['role'] = $role;
+			}
+
+			if( !empty( $other ) ){
+				foreach( $other as $key => $val ){
+					$user['user'][$key] = $val;
+				}
+			}
+
+			return $user;
+		}
+
+		// Use the build_zendesk_user function
+		public function create_user( $user ){
+			return $this->run( 'users', $user, 'POST' );
+		}
+
+		public function delete_user( $user_id ){
+			return $this->run( "users/$user_id", array(), 'DELETE' );
+		}
+
+		public function set_user_password( $user_id, $pass ){
+			return $this->run( "users/$user_id/password", array( 'password' => $pass ), 'POST' );
+		}
+
     /* User identities */
 
     /* Custom agent roles */
@@ -345,6 +501,13 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
     /* End users */
 
     /* Groups */
+		public function list_groups(){
+			return $this->run( 'groups' );
+		}
+
+		public function show_group( $group_id ){
+			return $this->run( "groups/$group_id" );
+		}
 
     /* Group memberships */
 
@@ -417,7 +580,7 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
     /* Channel framework */
 
     /* Twitter channel */
-    
+
 
   }
 }

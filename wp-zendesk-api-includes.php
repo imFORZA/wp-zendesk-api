@@ -14,3 +14,6 @@ include_once( plugin_dir_path( __FILE__ ) . 'wp-api-libraries-base.php' );
 include_once( plugin_dir_path( __FILE__ ) . 'wp-zendesk-api.php' );
 
 include_once( plugin_dir_path( __FILE__ ) . 'wp-zendesk-api-backup.php' );
+
+// for now
+include_once( plugin_dir_path( __FILE__ ) . 'wp-zendesk-api-backup.php' );

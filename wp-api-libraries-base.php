@@ -24,9 +24,6 @@ if( !class_exists( 'WpLibrariesBase' ) ) {
 		 * @return [type]        	The return of the function.
 		 */
 		protected function build_request( $route, $body = array(), $method = 'GET' ){
-
-      error_log("building_request");
-
 			// Sets headers.
 			$this->set_headers();
 			// Sets method.
@@ -49,20 +46,11 @@ if( !class_exists( 'WpLibrariesBase' ) ) {
 		}
 		protected function fetch(){
 
-      error_log("fetching");
-			// pp( $this->args, 'here' );
-			// Make the request.
-
-      pp( $this->base_uri . $this->route, 'request route' );
-      pp( $this->args, 'args' );
-
 			$response = wp_remote_request( $this->base_uri . $this->route, $this->args );
 			// Retrieve status code and body.
 			$code = wp_remote_retrieve_response_code( $response );
 			$body = json_decode( wp_remote_retrieve_body( $response ) );
-
-      pp( $body, 'body: ' );
-			// pp( $body );
+			
 			if( !$this->is_status_ok( $code ) ) {
 				return new WP_Error( 'response-error', sprintf( __( 'Status: &d', 'wp-postmark-api' ), $code ), $body );
 			}
