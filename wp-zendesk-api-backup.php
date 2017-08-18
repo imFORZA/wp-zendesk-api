@@ -1,13 +1,13 @@
 <?php
 
 /* Check if Class Exists. */
-if ( ! class_exists( 'Zendesk_Wordpress_API_Backup' ) ) {
+if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 
 
 	/**
 	 * Zendesk_Wordpress_API_Backup class.
 	 */
-	class Zendesk_Wordpress_API_Backup {
+	class Zendesk_Wordpress_API {
 
 
 		/**
@@ -312,11 +312,7 @@ if ( ! class_exists( 'Zendesk_Wordpress_API_Backup' ) ) {
 				$ticket['ticket']['via']['channel'] = $channel;
 			}
 
-			error_log(print_r( $ticket, true ));
-
 			$result = $this->_post( 'tickets.json', $ticket );
-
-			error_log(print_r( $result, true ));
 
 			if ( ! is_wp_error( $result ) && $result['response']['code'] == 201 ) {
 				$location = $result['headers']['location'];
@@ -555,7 +551,7 @@ if ( ! class_exists( 'Zendesk_Wordpress_API_Backup' ) ) {
 				return new WP_Error( 'zendesk-api-error', __( 'Could not fetch the comments at this time, please try again later.', 'wp-zendesk-api' ), array( 'status' => $result['response']['code'] ) );
 			}
 
-			return $comments;
+			return $comments; // como
 		}
 
 		/*
@@ -916,7 +912,7 @@ if ( ! class_exists( 'Zendesk_Wordpress_API_Backup' ) ) {
 		 * @return void
 		 */
 		public function show_group( $group_id ) {
-			$result = $this->_get( 'groups/' . $user_id . '.json' );
+			$result = $this->_get( 'groups/' . $group_id . '.json' );
 
 			if ( ! is_wp_error( $result ) && $result['response']['code'] == 200 ) {
 				$user = json_decode( $result['body'] );
