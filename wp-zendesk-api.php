@@ -54,7 +54,7 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 
 		// Useful search functions
 		public function get_tickets_by_email( $email ){
-			return $this->run( 'search', array( 'query', 'type:ticket reqeuster:'. $email ) );
+			return $this->run( 'search', array( 'query' => urlencode( 'type:ticket reqeuster:'. $email ) ) );
 		}
 
 		public function get_user_id_by_email( $email ){
@@ -69,6 +69,10 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 
     public function list_tickets(){
       return $this->run( "tickets" );
+    }
+
+    public function list_tickets_by_user_id_requested( $user_id ){
+      return $this->run( "users/$user_id/tickets/requested" );
     }
 
     public function show_ticket( $ticket_id ){
