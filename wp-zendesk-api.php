@@ -8,6 +8,7 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
   class WpZendeskAPI extends WpLibrariesBase {
 
     private $username;
+		private $backup_username = '';
 
     private $api_key;
 
@@ -33,6 +34,22 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
       $this->api_key = $api_key;
     }
 
+		public function set_username_for_call( $username ){
+			$this->backup_username = $this->username;
+			$this->username = $username;
+		}
+
+		protected function fetch(){
+			$result = parent::fetch();
+
+			if( $this->backup_username !== '' ){
+				$this->username = $this->backup_username;
+				$this->backup_username = '';
+			}
+
+			return $result;
+		}
+
     protected function set_headers(){
       $this->args['headers'] = array(
         'Content-Type' => 'application/json',
@@ -54,7 +71,7 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 
 		// Useful search functions
 		public function get_tickets_by_email( $email ){
-			return $this->run( 'search', array( 'query' => urlencode( 'type:ticket reqeuster:'. $email ) ) );
+			return $this->run( 'search', array( 'query' => urlencode( 'type:ticket requester:'. $email ) ) );
 		}
 
 		public function get_user_id_by_email( $email ){
@@ -62,13 +79,12 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 		}
 
 		public function get_requests_by_user( $email ) {
-			return $this->run( 'requests/search', array( 'query' => urlencode( 'requester:' . $email ) ) );
+			return $this->run( 'search', array( 'query' => urlencode( 'type:request requester:' . $email . ' status:all' ) ) );
 		}
 
     /* Tickets */
 
     public function list_tickets( $per_page = 100, $page = 1, $sort_by = '', $sort_order = 'desc' ){
-			pp( $page );
 			$args = array(
 				'per_page' => $per_page,
 				'page' => $page,
@@ -234,8 +250,17 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 
     /* Requests */
 
-    public function list_requests(){
-			return $this->run( 'requests' );
+    public function list_requests($per_page = 100, $page = 1, $sort_by = '', $sort_order = 'desc' ){
+			$args = array(
+				'per_page' => $per_page,
+				'page' => $page,
+			);
+
+			if( $sort_by !== '' ){
+				$args['sort_by'] = $sort_by;
+				$args['sort_order'] = $sort_order;
+			}
+			return $this->run( 'requests', $args );
     }
 
     public function search_requests(){
