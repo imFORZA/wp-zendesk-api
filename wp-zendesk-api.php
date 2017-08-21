@@ -67,7 +67,7 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 
     /* Tickets */
 
-    public function list_tickets( $per_page = 100, $page = 1, $sort_by = '' ){
+    public function list_tickets( $per_page = 100, $page = 1, $sort_by = '', $sort_order = 'desc' ){
 			pp( $page );
 			$args = array(
 				'per_page' => $per_page,
@@ -76,7 +76,7 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 
 			if( $sort_by !== '' ){
 				$args['sort_by'] = $sort_by;
-				$args['sort_order'] = 'desc';
+				$args['sort_order'] = $sort_order;
 			}
       return $this->run( "tickets", $args );
     }
