@@ -67,8 +67,18 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 
     /* Tickets */
 
-    public function list_tickets(){
-      return $this->run( "tickets" );
+    public function list_tickets( $per_page = 100, $page = 1, $sort_by = '' ){
+			pp( $page );
+			$args = array(
+				'per_page' => $per_page,
+				'page' => $page,
+			);
+
+			if( $sort_by !== '' ){
+				$args['sort_by'] = $sort_by;
+				$args['sort_order'] = 'desc';
+			}
+      return $this->run( "tickets", $args );
     }
 
     public function list_tickets_by_user_id_requested( $user_id ){
