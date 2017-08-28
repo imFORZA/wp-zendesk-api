@@ -79,7 +79,7 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 			return $this->run( 'users/search', array( 'query' => $email ) );
 		}
 
-		public function get_requests_by_user( $email ) {
+		public function get_requests_by_email( $email ) {
 			return $this->run( 'search', array( 'query' => urlencode( 'type:request requester:' . $email . ' status:all' ) ) );
 		}
 
@@ -158,6 +158,18 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
     public function update_ticket( $ticket_id, $ticket_obj ){
 			return $this->run( 'tickets/' . $ticket_id, $ticket_obj, 'PUT' );
     }
+
+		public function get_requests_by_user( $user_id ){
+			return $this->run( "users/$user_id/tickets/requested" );
+		}
+
+		public function get_ccd_by_user( $user_id ){
+			return $this->run( "users/$user_id/tickets/ccd" );
+		}
+
+		public function get_assigned_by_user( $user_id ){
+			return $this->run( "users/$user_id/tickets/assigned" );
+		}
 
 		// eh, todo.
     public function update_many_tickets( ){
@@ -591,15 +603,6 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 
     /* Group memberships */
 
-		// Maybe make this name shorter?
-		public function build_zendesk_organization_membership( $user_id, $org_id ){
-			return array( 'organization_memberships' => array( 'user_id' => $user_id, 'organization_id' => $org_id ) ); // example
-		}
-
-		public function create_many_memberships( $memberships ){
-			return $this->run( "organization_memberships/create_many", $memberships, "POST" );
-		}
-
     /* Sessions */
 
     /* Organizations */
@@ -671,6 +674,16 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 			}else{
 				return $this->run( "organizations/$organization_id/organization_memberships", array( 'page' => $page ) );
 			}
+		}
+
+		// Maybe make this name shorter?
+		public function build_zendesk_organization_membership( $user_id, $org_id ){
+			return array( 'organization_memberships' => array( 'user_id' => $user_id, 'organization_id' => $org_id ) ); // example
+		}
+
+		// Huh, won't actually delete them. Neat.
+		public function create_many_memberships( $memberships ){
+			return $this->run( "organization_memberships/create_many", $memberships, "POST" );
 		}
 
     /* Automations */
