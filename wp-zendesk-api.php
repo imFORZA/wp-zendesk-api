@@ -57,8 +57,8 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
       );
     }
 
-    protected function run( $route, $args = array(), $method = 'GET' ){
-      return $this->build_request( '/' . $route . '.json', $args, $method )->fetch();
+    protected function run( $route, $args = array(), $method = 'GET', $add_data_type = true ){
+      return $this->build_request( '/' . $route . ($add_data_type?'.json':''), $args, $method )->fetch();
     }
 
     protected function clear(){
@@ -69,17 +69,22 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
       return $this->run( "search", array( 'query' => $search_string ) );
     }
 
-		// Useful search functions
+		/* Useful search functions */
+
 		public function get_tickets_by_email( $email ){
 			return $this->run( 'search', array( 'query' => urlencode( 'type:ticket requester:'. $email ) ) );
 		}
 
-		public function get_user_id_by_email( $email ){
+		public function get_user_by_email( $email ){ // or is it get user?
 			return $this->run( 'users/search', array( 'query' => $email ) );
 		}
 
 		public function get_requests_by_user( $email ) {
 			return $this->run( 'search', array( 'query' => urlencode( 'type:request requester:' . $email . ' status:all' ) ) );
+		}
+
+		public function get_organizations_by_name( $organization_name ){
+			return $this->run( 'search', array( 'query' => urlencode( 'type:organization ' . $organization_name ) ) );
 		}
 
     /* Tickets */
@@ -498,6 +503,24 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 			return $this->run( "users/$user_id/related" );
 		}
 
+		/**
+		 * Build zendesk user function. Used for creating a zendesk user.
+		 * Ie, creating a user could be done by:
+		 * <code>return $zenapi->create_user( $zenapi->build_zendesk_user( $name, $email,
+		 * $role, array( 'active' => true ) ) );</code>
+		 * All parameters are optional, an empty user object will be returned if they
+		 * are all empty.
+		 *
+		 * @param  string $name  (Default: '') Name of the user.
+		 * @param  string $email (Default: '') Email of the user.
+		 * @param  string $role  (Default: '') Role of the user. Must be either 'end-user',
+		 *                       'agent', or 'admin'
+		 * @param  array  $other (Default: array()) An associative array of whatever
+		 *                       else you want to put in. Each key will have its value
+		 *                       placed in under the key.
+		 * @return array         User object (really an array) up to specs with the Zendesk
+		 *                       API style.
+		 */
 		public function build_zendesk_user( $name = '', $email = '', $role = '', $other = array() ){
 			$user = array( 'user' => array() );
 
@@ -529,11 +552,29 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 			return $this->run( "users/$user_id", array(), 'DELETE' );
 		}
 
+		public function bulk_delete_users( $user_ids ){
+			if( gettype( $user_ids ) === 'string' ){
+				return $this->run( "users/destroy_many.json?ids=$user_ids", array(), 'DELETE', false );
+			}else if( gettype( $user_ids ) === 'array' ){
+				return $this->run( "users/destroy_many.json?ids=" . implode(',', $user_ids ), array(), 'DELETE', false );
+			}else{
+				return "Error: invalid data type.";
+			}
+		}
+
 		public function set_user_password( $user_id, $pass ){
 			return $this->run( "users/$user_id/password", array( 'password' => $pass ), 'POST' );
 		}
 
+		public function get_user_groups( $user_id ){
+			return $this->run( "users/$user_id/groups" );
+		}
+
     /* User identities */
+
+		public function list_identities( $user_id ){
+			return $this->run( "users/$user_id/identities" );
+		}
 
     /* Custom agent roles */
 
@@ -550,13 +591,87 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 
     /* Group memberships */
 
+		// Maybe make this name shorter?
+		public function build_zendesk_organization_membership( $user_id, $org_id ){
+			return array( 'organization_memberships' => array( 'user_id' => $user_id, 'organization_id' => $org_id ) ); // example
+		}
+
+		public function create_many_memberships( $memberships ){
+			return $this->run( "organization_memberships/create_many", $memberships, "POST" );
+		}
+
     /* Sessions */
 
     /* Organizations */
 
+		public function list_organizations( $user_id = '', $page = 1 ){
+			if( $user_id !== '' ){
+				return $this->run( "users/$user_id/organizations" );
+			}
+
+			return $this->run( "organizations", array( 'page' => $page ) );
+		}
+
+		public function build_zendesk_organization( $name = '', $other = array() ){
+			$org = array( 'organization' => array() );
+
+			if( $name !== '' ){
+				$org['organization']['name'] = $name;
+			}
+
+			if( !empty( $other ) ){
+				foreach( $other as $key => $val ){
+					$user['organization'][$key] = $val;
+				}
+			}
+
+			return $org;
+		}
+
+		/**
+		 * Create an organization.
+		 *
+		 * @param  mixed  $organization If a string, an organization will be created
+		 *                              with the name equal to that string. Otherwise,
+		 *                              send in an object created using the build_zendesk_organization
+		 *                              method.
+		 * @return [type]               [description]
+		 */
+		public function create_organization( $organization ){
+			if( gettype( $organization ) == 'string' ){
+				$organization = $this->build_zendesk_organization( $organization );
+			}
+
+			return $this->run( 'organizations', $organization, 'POST' );
+		}
+
+		public function delete_organization( $organization_id ){
+			return $this->run( "organizations/$organization_id", array(), 'DELETE' );
+		}
+
+		public function delete_many_organizations( $org_ids ){
+			if( gettype( $org_ids ) === 'string' ){
+				return $this->run( "organizations/destroy_many.json?ids=" . $org_ids, array(), 'DELETE', false );
+			}else if( gettype( $org_ids ) === 'array' ){
+				return $this->run( "organizations/destroy_many.json?ids=" . implode( ',', $org_ids ), array(), 'DELETE', false );
+			}else{
+				return "Error: invalid data type.";
+			}
+		}
+
     /* Organization Subscriptions */
 
     /* Organization Memberships */
+
+		public function list_organization_memberships( $organization_id = '', $user_id = '', $page = 1 ){
+			if( $organization_id === '' && $user_id === '' ){
+				return $this->run( 'organization_memberships', array( 'page' => $page ) );
+			}else if( $organization_id === '' ){
+				return $this->run( "users/$user_id/organization_memberships", array( 'page' => $page ) );
+			}else{
+				return $this->run( "organizations/$organization_id/organization_memberships", array( 'page' => $page ) );
+			}
+		}
 
     /* Automations */
 
