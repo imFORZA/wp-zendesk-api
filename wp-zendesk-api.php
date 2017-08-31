@@ -65,8 +65,13 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
       $this->args = array();
     }
 
-    public function search( $search_string ){
-      return $this->run( "search", array( 'query' => $search_string ) );
+    public function search( $search_string, $per_page = 100, $page = 1 ){
+			$args = array(
+				 'query'    => $search_string,
+				 'per_page' => $per_page,
+				 'page'     => $page,
+			);
+      return $this->run( "search", $args );
     }
 
 		/* Useful search functions */
@@ -99,6 +104,7 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 				$args['sort_by'] = $sort_by;
 				$args['sort_order'] = $sort_order;
 			}
+
       return $this->run( "tickets", $args );
     }
 
@@ -111,39 +117,54 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
     }
 
 		// Ids -> Comma separated list or array of ticket IDs to return
-    public function show_tickets( $ids){
+    public function show_tickets( $ids ){
 			if( is_array( $ids ) ){
 				$ids = implode( $ids, ',' );
 			}
 			return $this->run( "tickets/show_many", array( 'ids' => $ids ) );
     }
 
-		public function build_zendesk_ticket( $subject, $description, $requester_name = '', $requester_email = '', $tags = '', $channel = '' ){
-			$ticket = array(
-				'ticket' => array(
-					'subject' => $subject,
-					'comment' => array(
-						'body' => $description,
-					),
-				),
-			);
+		public function build_zendesk_ticket( $subject = '', $description = '', $comment = '', $requester_id = '', $tags = '', $other = array() ){
+			$ticket = array();
+
+			if( $subject !== '' ){
+				$ticket['subject'] = $subject;
+			}
+
+			if( $description !== '' ){
+				$ticket['description'] = $description;
+			}
+
+			if( $comment !== '' ){
+				$ticket['comment'] = $comment;
+			}
+
+			if( $requester_id != '' ){
+				$ticket['requester_id'] = $requester_id;
+			}
 
 			if( $tags != '' ){
-				$ticket['ticket']['tags'] = implode(',', $tags);
+				if( gettype( $tags ) == 'array' ){
+					$ticket['tags'] = implode(',', $tags);
+				}else{
+					$tickets['tags'] = $tags;
+				}
 			}
 
-			if( $channel != '' ){
-				$ticket['ticket']['via']['channel'] = $channel;
+			if( !empty( $other ) ){
+				foreach( $other as $key => $val ){
+					$ticket[$key] = $val;
+				}
 			}
 
-			return $ticket;
+			return array('ticket' => $ticket);
 		}
 
 		// Ticket could be a ticket, or it could be the subject. If it's the subject, a ticket will be built off of it.
-    public function create_ticket( $ticket, $description = '', $requester_name = '', $requester_email = '', $tags = '', $channel = '' ){
+    public function create_ticket( $ticket, $description = '', $requester_id = '', $tags = '', $other = array() ){
 
-			if( gettype( $ticket ) !== 'object' || gettype( $ticket ) !== 'array' ){
-				$ticket = $this->build_zendesk_ticket( $subject, $description, $requester_name, $requester_email, $tags, $channel );
+			if( gettype( $ticket ) !== 'object' && gettype( $ticket ) !== 'array' ){
+				$ticket = $this->build_zendesk_ticket( $ticket, $description, '', $requester_id, $tags, $other );
 			}
 
 			return $this->run( 'tickets', $ticket, 'POST' );
@@ -167,8 +188,12 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 			return $this->run( "users/$user_id/tickets/ccd" );
 		}
 
-		public function get_assigned_by_user( $user_id ){
-			return $this->run( "users/$user_id/tickets/assigned" );
+		public function get_assigned_by_user( $user_id, $per_page = 100, $page = 1 ){
+			$args = array(
+				'per_page' => $per_page,
+				'page' => $page,
+			);
+			return $this->run( "users/$user_id/tickets/assigned", $args );
 		}
 
 		// eh, todo.
