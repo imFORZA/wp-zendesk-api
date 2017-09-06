@@ -585,6 +585,13 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 			return $this->run( 'users', $user, 'POST' );
 		}
 
+    public function search_users( $query, $external_id = false ){
+      if( $external_id !== false ){
+        return $this->run( 'users/search', array( 'external_id' => $external_id ) );
+      }
+      return $this->run( 'users/search', array('query' => $query ) );
+    }
+
 		public function delete_user( $user_id ){
 			return $this->run( "users/$user_id", array(), 'DELETE' );
 		}
