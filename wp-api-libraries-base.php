@@ -11,8 +11,10 @@ if( !class_exists( 'WpLibrariesBase' ) ) {
 		/* */
 		protected $args;
 		protected $base_uri;
-		public function __construct( $base_uri ){
+		protected $is_debug;
+		public function __construct( $base_uri, $debug = false ){
 			$this->base_uri = $base_uri;
+			$this->is_debug = $debug;
 		}
 		/**
 		 * Build request function: prepares the class for a fetch request.
@@ -51,7 +53,7 @@ if( !class_exists( 'WpLibrariesBase' ) ) {
 			$code = wp_remote_retrieve_response_code( $response );
 			$body = json_decode( wp_remote_retrieve_body( $response ) );
 
-			if( !$this->is_status_ok( $code ) ) {
+			if( !$this->is_status_ok( $code ) && !$this->is_debug ) {
 				return new WP_Error( 'response-error', sprintf( __( 'Status: &d', 'wp-postmark-api' ), $code ), $body );
 			}
 			$this->clear();
