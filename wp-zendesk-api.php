@@ -1,44 +1,127 @@
 <?php
+/**
+ * WP Zendesk API class, for interacting with the Zendesk API.
+ */
 
-
+/* If access directly, exit. */
 if( !defined( 'ABSPATH'  ) ){ exit; }
 
+/* Confirm that not being included elsewhere. */
 if( ! class_exists( 'WpZendeskAPI' ) ){
 
+	/**
+	 * WP Zendesk API class.
+	 *
+	 * Extended off the WP API Libraries Base class.
+	 * @link https://github.com/wp-api-libraries/wp-api-base
+	 */
   class WpZendeskAPI extends WpLibrariesBase {
 
+		/**
+		 * The username through which to make all calls.
+		 *
+		 * @var string
+		 */
     private $username;
+
+		/**
+		 * The alternate username (should not be accessed frequently). Used for calls
+		 * where you want to act as a different user.
+		 *
+		 * @var string
+		 */
 		private $backup_username = '';
 
+		/**
+		 * The API key used for authentication.
+		 *
+		 * @var string
+		 */
     private $api_key;
 
+		/**
+		 * The extended URI to which requests are made.
+		 *
+		 * @var string
+		 */
     protected $base_uri = '';
 
+		/**
+		 * Arguments to be built upon.
+		 *
+		 * Contains header and body information.
+		 *
+		 * @var string
+		 */
     protected $args;
 
+		/**
+		 * Constructorinatorino 9000
+		 *
+		 * @param string $domain   The domain extension of zendesk (basically org name).
+		 * @param string $username The username through which requests will be made
+		 *                         under.
+		 * @param string $api_key  The API key used for authentication.
+		 */
     public function __construct( $domain, $username, $api_key ){
       $this->base_uri = "https://$domain.zendesk.com/api/v2";
       $this->username = $username;
       $this->api_key = $api_key;
     }
 
+		/**
+		 * Get the current username.
+		 *
+		 * @return string The username.
+		 */
     public function get_username(){
       return $this->username;
     }
+
+		/**
+		 * Get the current API key.
+		 *
+		 * @return string The API key.
+		 */
     public function get_api_key(){
       return $this->api_key;
     }
 
+		/**
+		 * Set authentication.
+		 *
+		 * Used for changing the authentication methods.
+		 * Note: the domain cannot be changed.
+		 *
+		 * @param string $username The new username.
+		 * @param string $api_key  The new API key.
+		 */
     public function set_auth( $username, $api_key ){
       $this->username = $username;
       $this->api_key = $api_key;
     }
 
+		/**
+		 * Set username for a single call.
+		 *
+		 * Useful for, as an example, fetching requests that an end user is authorized
+		 * to view, by setting the username for the next call to be their email.
+		 *
+		 * After fetch() is run, the username is reset to the original (or most recently
+		 * updated) username.
+		 *
+		 * @param string $username The temporary single call username.
+		 */
 		public function set_username_for_call( $username ){
 			$this->backup_username = $this->username;
 			$this->username = $username;
 		}
 
+		/**
+		 * Perform the request, normally after build_request.
+		 *
+		 * @return mixed The body of the call.
+		 */
 		protected function fetch(){
 			$result = parent::fetch();
 
@@ -50,6 +133,13 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 			return $result;
 		}
 
+		/**
+		 * Abstract extended function that is used to set authorization before each
+		 * call. $this->args['headers'] are wiped after every fetch call, hence this
+		 * function is necessary.
+		 *
+		 * @return void
+		 */
     protected function set_headers(){
       $this->args['headers'] = array(
         'Content-Type' => 'application/json',
@@ -57,14 +147,48 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
       );
     }
 
+		/**
+		 * Handle the build request and fetch methods, along with (optionally, but by
+		 * default) adding the data type extension to the route.
+		 *
+		 * @param  string $route         The route to access.
+		 * @param  array  $args          (Default: array()) Optional arguments. If the request
+		 *                               method is 'GET', then the arguments are appended to
+		 *                               the route as query args. Otherwise, they are stored
+		 *                               in the body of the request.
+		 * @param  string $method        (Default: 'GET') The type of request to make.
+		 * @param  bool   $add_data_type (Default: true) Whether to add the data type
+		 *                               extension to the route or not.
+		 * @return [type]                [description]
+		 */
     protected function run( $route, $args = array(), $method = 'GET', $add_data_type = true ){
       return $this->build_request( '/' . $route . ($add_data_type?'.json':''), $args, $method )->fetch();
     }
 
+		/**
+		 * Clear arguments.
+		 *
+		 * Extended just in case you don't want to wipe everything.
+		 *
+		 * Recommended at least clearing body.
+		 *
+		 * @return void
+		 */
     protected function clear(){
       $this->args = array();
     }
 
+		/**
+		 * Query the Zendesk search route.
+		 *
+		 * @link https://developer.zendesk.com/rest_api/docs/core/search
+		 *
+		 * @param  string  $search_string The search query.
+		 * @param  integer $per_page      (Default: 100) The number of results to return
+		 *                                per page. Maxes out at 100.
+		 * @param  integer $page          (Default: 1) The page off of results to start at.
+		 * @return object                 A stdClass of the body from the response.
+		 */
     public function search( $search_string, $per_page = 100, $page = 1 ){
 			$args = array(
 				 'query'    => $search_string,
