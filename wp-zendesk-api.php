@@ -477,8 +477,8 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 			return $this->run( 'requests/' . $request_id, $request, 'PUT' );
 		}
 
-    public function list_comments( $ticket_id ){
-			return $this->run( "tickets/$ticket_id/comments" ); // might need to do a json_decode? TODO: look into
+    public function list_comments( $ticket_id, $sort_order = 'asc' ){
+			return $this->run( "tickets/$ticket_id/comments", array( 'sort_order' => $sort_order ) ); // might need to do a json_decode? TODO: look into
     }
 
     public function redact_string_in_comment(){
