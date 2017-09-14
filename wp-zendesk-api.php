@@ -31,6 +31,7 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 		 * @var string
 		 */
 		private $backup_username = '';
+		private $fast_rest = true;
 
 		/**
 		 * The API key used for authentication.
@@ -64,7 +65,7 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 		 * @param string $api_key  The API key used for authentication.
 		 */
     public function __construct( $domain, $username, $api_key ){
-      $this->base_uri = "https://$domain.zendesk.com/api/v2";
+      $this->base_uri = "https://$domain.zendesk.com/api/v2/";
       $this->username = $username;
       $this->api_key = $api_key;
     }
@@ -112,9 +113,26 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 		 *
 		 * @param string $username The temporary single call username.
 		 */
-		public function set_username_for_call( $username ){
+		public function set_temporary_username( $username, $fast_reset = true ){
 			$this->backup_username = $this->username;
 			$this->username = $username;
+			$this->fast_reset = $fast_reset;
+		}
+
+		/**
+		 * Resets the username to its original status.
+		 *
+		 * Designed to be used with set_temporary_username('<username>', false).
+		 *
+		 * @return WpZendeskAPI Self.
+		 */
+		public function reset_username(){
+			if( $this->backup_username !== '' ){
+				$this->username = $this->backup_username;
+				$this->backup_username = '';
+			}
+
+			return $this;
 		}
 
 		/**
@@ -125,7 +143,7 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 		protected function fetch(){
 			$result = parent::fetch();
 
-			if( $this->backup_username !== '' ){
+			if( $this->backup_username !== '' && $this->fast_reset ){
 				$this->username = $this->backup_username;
 				$this->backup_username = '';
 			}
@@ -162,7 +180,7 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 		 * @return [type]                [description]
 		 */
     protected function run( $route, $args = array(), $method = 'GET', $add_data_type = true ){
-      return $this->build_request( '/' . $route . ($add_data_type?'.json':''), $args, $method )->fetch();
+      return $this->build_request( $route . ($add_data_type?'.json':''), $args, $method )->fetch();
     }
 
 		/**
@@ -200,6 +218,12 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 
 		/* Useful search functions */
 
+    /**
+     * Get tickets associated with an email.
+     *
+     * @param  string $email The email to look for.
+     * @return object        The results of the search (Zendesk search results).
+     */
 		public function get_tickets_by_email( $email ){
 			return $this->run( 'search', array( 'query' => urlencode( 'type:ticket requester:'. $email ) ) );
 		}
@@ -490,16 +514,23 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 
     /* Attachments */
 
-    public function show_attachment(){
-
+    public function show_attachment( $attachment_id ){
+      return $this->run( "api/v2/attachments/$attachment_id" );
     }
 
     public function delete_attachment(){
-
+      return $this->run( "api/v2/attachments/$attachment_id", array(), 'DELETE' );
     }
 
-    public function upload_files(){
+    public function upload_files( $filename, $file, $token = null ){
+      $route = "api/v2/uploads.json?filename=$filename";
+      if( $token !== null ){
+        $route .= "&token=$token";
+      }
 
+      // Okaaaaaaay... how the heck do I handle uploads?
+
+      return $this->run( $route, $body, 'POST', false );
     }
 
     public function delete_upload(){
