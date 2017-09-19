@@ -32,6 +32,7 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 		 */
 		private $backup_username = '';
 		private $fast_rest = true;
+		private $no_auth = false;
 
 		/**
 		 * The API key used for authentication.
@@ -56,6 +57,8 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 		 */
     protected $args;
 
+		protected $is_debug;
+
 		/**
 		 * Constructorinatorino 9000
 		 *
@@ -64,10 +67,11 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 		 *                         under.
 		 * @param string $api_key  The API key used for authentication.
 		 */
-    public function __construct( $domain, $username, $api_key ){
+    public function __construct( $domain, $username, $api_key, $debug = false ){
       $this->base_uri = "https://$domain.zendesk.com/api/v2/";
       $this->username = $username;
       $this->api_key = $api_key;
+			$this->is_debug = $debug;
     }
 
 		/**
@@ -119,6 +123,11 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 			$this->fast_reset = $fast_reset;
 		}
 
+		public function set_temporary_noauth( $fast_reset = true ){
+			$this->no_auth = true;
+			$this->fast_reset = $fast_reset;
+		}
+
 		/**
 		 * Resets the username to its original status.
 		 *
@@ -161,8 +170,11 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
     protected function set_headers(){
       $this->args['headers'] = array(
         'Content-Type' => 'application/json',
-        'Authorization' => 'Basic ' . base64_encode( $this->username . '/token:' . $this->api_key ),
       );
+
+			if( !$this->no_auth ){
+				$this->args['headers']['Authorization'] = 'Basic ' . base64_encode( $this->username . '/token:' . $this->api_key );
+			}
     }
 
 		/**
@@ -180,8 +192,59 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 		 * @return [type]                [description]
 		 */
     protected function run( $route, $args = array(), $method = 'GET', $add_data_type = true ){
+			// Caching happens here. ONLY if the request is a get, serialize the route + args.
+			if( 'GET' === $method && ! $this->is_debug ){
+        // I was thinking about building the request first then serializing it, but
+  			// that build should be identical for identical inputs. Therefore:
+  			//
+  			// Right here, serialize the route and args, make a hash of each. Store to a
+  			// custom table, search for the hash, along with a timeout (say, 60 seconds?).
+
+				$key = 'hostops_zendeskapi_' . $route . ($add_data_type?'.json':'') . serialize( $args );
+
+				$result = get_transient( $key );
+
+				if( false === $result ){
+					$result = $this->build_request( $route . ($add_data_type?'.json':''), $args, $method )->fetch();
+
+					$expiration = 60; // Seconds.
+
+					// Possible TODO: set longer expiration, depending on the route.
+					//
+					// Ie: more expensive or frequent calls could be cached longer, such as
+					// pinging the search API.
+					//
+					// Heck I could get clever with this. Perhaps when updating a ticket delete
+					// its transient, and this would allow me to have a longer expiration date.
+
+					set_transient( $key, $result, $expiration );
+				}
+
+				return $result;
+      }
+
       return $this->build_request( $route . ($add_data_type?'.json':''), $args, $method )->fetch();
     }
+
+		/**
+		 * Deletes all stored transients.
+		 *
+		 * More a helper function, should not be often routinely called.
+		 *
+		 * @return integer The number rows affected.
+		 */
+		public function clear_cache(){
+			global $wpdb;
+
+			$count = $wpdb->query( $wpdb->prepare(
+				"DELETE FROM $wpdb->options
+				WHERE `option_name` LIKE '%s'",
+				'%hostops_zendeskapi_%'
+			));
+
+			// Divided by 2 because there's a row for both the value itself and its expiration.
+			return $count / 2;
+		}
 
 		/**
 		 * Clear arguments.
@@ -197,6 +260,29 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
     }
 
 		/**
+		 * Function for building zendesk pagination.
+		 *
+		 * @param  integer $per_page   [description]
+		 * @param  integer $page       [description]
+		 * @param  string  $sort_by    [description]
+		 * @param  string  $sort_order [description]
+		 * @return [type]              [description]
+		 */
+		public function build_zendesk_pagination( $per_page = 100, $page = 1, $sort_by = '', $sort_order = 'desc' ){
+			$args = array(
+				'per_page' => $per_page,
+				'page' => $page,
+			);
+
+			if( $sort_by !== '' ){
+				$args['sort_by'] = $sort_by;
+				$args['sort_order'] = $sort_order;
+			}
+
+			return $args;
+		}
+
+		/**
 		 * Query the Zendesk search route.
 		 *
 		 * @link https://developer.zendesk.com/rest_api/docs/core/search
@@ -207,13 +293,18 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 		 * @param  integer $page          (Default: 1) The page off of results to start at.
 		 * @return object                 A stdClass of the body from the response.
 		 */
-    public function search( $search_string, $per_page = 100, $page = 1 ){
+    public function search( $search_string, $per_page = 100, $page = 1, $sort_by = '', $sort_order = 'desc' ){
 			$args = array(
-				 'query'    => $search_string,
-				 'per_page' => $per_page,
-				 'page'     => $page,
+				 'query'      => $search_string,
+				 'per_page'   => $per_page,
+				 'page'       => $page,
+				 'sort_order' => $sort_order
 			);
-      return $this->run( "search", $args );
+
+			if( $sort_by !== '' ){
+				$args['sort_by'] = $sort_by;
+			}
+      return $this->run( 'search', $args );
     }
 
 		/* Useful search functions */
@@ -253,7 +344,7 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 				$args['sort_order'] = $sort_order;
 			}
 
-      return $this->run( "tickets", $args );
+      return $this->run( 'tickets', $args );
     }
 
     public function list_tickets_by_user_id_requested( $user_id ){
@@ -269,10 +360,10 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 			if( is_array( $ids ) ){
 				$ids = implode( $ids, ',' );
 			}
-			return $this->run( "tickets/show_many", array( 'ids' => $ids ) );
+			return $this->run( 'tickets/show_many', array( 'ids' => $ids ) );
     }
 
-		public function build_zendesk_ticket( $subject = '', $description = '', $comment = '', $requester_id = '', $tags = '', $other = array() ){
+		public function build_zendesk_ticket( $subject = '', $description = '', $comment = '', $requester_id = '', $tags = '', $other = array(), $raw = false ){
 			$ticket = array();
 
 			if( $subject !== '' ){
@@ -303,6 +394,10 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 				foreach( $other as $key => $val ){
 					$ticket[$key] = $val;
 				}
+			}
+
+			if( $raw ){
+				return $ticket;
 			}
 
 			return array('ticket' => $ticket);
@@ -344,42 +439,46 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 			return $this->run( "users/$user_id/tickets/assigned", $args );
 		}
 
-		// eh, todo.
-    public function update_many_tickets( ){
-
+		/**
+		 * @link https://developer.zendesk.com/rest_api/docs/core/tickets#update-many-tickets
+		 *
+		 * @param  array  $ticket_objs Accepts an array of up to 100 ticket objects.
+		 *                             If ticket is set, then will require ids to be set.
+		 *                             Otherwise, tickets should be set, and ids is not necessary
+		 *                             to be set.
+		 * @param  array  $ids         A comma-separated list of up to 100 ticket ids.
+		 *                             Use this for modifying many tickets with the same
+		 *                             change.
+		 * @return [type]              [description]
+		 */
+    public function update_many_tickets( $ticket_obj, $ids = array() ){
+      if( empty( $ids ) ){
+        return $this->run( 'tickets/update_many', $ticket_obj, 'PUT' );
+      }else{
+        return $this->run( 'tickets/update_many.json?ids=' . implode( ',', $ids ), $ticket_obj, 'PUT', false );
+      }
     }
 
     public function protect_ticket_update_collisions(){
 
     }
 
-    public function mark_ticket_spam_and_block_requester(){
-
+    public function mark_ticket_spam_and_block_requester( $ticket_id ){
+      return $this->run( "tickets/$ticket_id/mark_as_spam", array(), 'PUT' );
     }
 
-    public function mark_many_tickets_as_spam(){
-
+    public function mark_many_tickets_as_spam( $ids ){
+      return $this->run( 'tickets/mark_many_as_spam.json?ids=' . implode( ',', $ids ), array(), 'PUT', false );
     }
 
     public function merge_tickets_into_target(){
 
     }
 
-    public function get_ticket_related_info(){
-
+    public function get_ticket_related_info( $ticket_id ){
+			return $this->run( "tickets/$ticket_id/related" );
     }
 
-    public function set_collaborators(){
-
-    }
-
-    public function set_metadata(){
-
-    }
-
-    public function attach_files(){
-
-    }
 
     public function create_ticket_new_requester(){
 
@@ -393,53 +492,104 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 			return $this->run( "tickets/$ticket_id", array(), 'DELETE' );
     }
 
-    public function bulk_delete_tickets(){
+    public function bulk_delete_tickets( $ticket_ids = array() ){
+			return $this->run( 'tickets/destroy_many.json?ids=' . implode( ',', $ticket_ids ), array(), 'DELETE', false );
     }
 
     public function show_delete_tickets(){
-
+			return $this->run( 'deleted_tickets' );
     }
 
-    public function restore_deleted_ticket(){
-
+    public function restore_deleted_ticket( $ticket_id ){
+			return $this->run( "deleted_tickets/$ticket_id/restore", array(), 'PUT' );
     }
 
-    public function restore_bulk_deleted_tickets(){
-
+    public function restore_bulk_deleted_tickets( $ticket_ids = array() ){
+			return $this->run( 'deleted_tickets/restore_many?ids=' . implode( ',', $ticket_ids ), array(), 'PUT', false );
     }
 
     public function delete_tickets_permanently(){
 
     }
 
-    public function list_collaborators_ticket(){
-
+		/**
+		 * List collaborators for a ticket.
+		 *
+		 * @param  string $ticket_id The ID of the ticket (can also be numeric).
+		 * @return array             A list of collaborators on a ticket.
+		 */
+    public function list_collaborators_ticket( $ticket_id ){
+			return $this->run( "tickets/$ticket_id/collaborators" );
     }
 
-    public function list_ticket_incidents(){
-
+		/**
+		 * List incidents for a ticket.
+		 *
+		 * @param  [type] $ticket_id [description]
+		 * @return array             A list of incidents from a ticket.
+		 */
+    public function list_ticket_incidents( $ticket_id ){
+			return $this->run( "tickets/$ticket_id/incidents" );
     }
 
+		/**
+		 * List ticket problems.
+		 *
+		 * The response is always ordered by updated_at, in desc order.
+		 *
+		 * @return [type] [description]
+		 */
     public function list_ticket_problems(){
-
+			return $this->run( 'problems' );
     }
 
-    public function autocomplete_problems(){
-
+		/**
+		 * Returns tickets whose type is "Problem" and whose subject contains the string
+		 * specified in the <code>text</code> parameter.
+		 *
+		 * @return array A list of tickets that have been autocompleted.
+		 */
+    public function autocomplete_problems( $text ){
+			return $this->run( 'autocomplete', array( 'text' => $text ), 'POST' );
     }
 
     /* Ticket import */
 
-    public function ticket_import(){
-
+		/**
+		 * The endpoint takes a ticket object describing the ticket.
+		 *
+		 * @link https://developer.zendesk.com/rest_api/docs/core/ticket_import#ticket-import
+		 * @param  array $ticket A ZendeskAPI ticket object (see $this->build_zendesk_ticket()).
+		 * @return object        The successfully created ticket (hopefully).
+		 */
+    public function ticket_import( $ticket ){
+			return $this->run( 'imports/tickets', $ticket, 'POST' );
     }
 
-    public function bulk_ticket_import(){
-
+		/**
+		 * The endpoint takes a tickets array of up to 100 ticket objects.
+		 *
+		 * Similar to single tickets, except they're single tickets.
+		 *
+		 * @link https://developer.zendesk.com/rest_api/docs/core/ticket_import#ticket-bulk-import
+		 * @param  [type] $tickets [description]
+		 * @return [type]          [description]
+		 */
+    public function bulk_ticket_import( $tickets ){
+			return $this->run( 'imports/tickets/create_many', $tickets, 'POST' );
     }
 
     /* Requests */
 
+		/**
+		 * List general requests.
+		 *
+		 * @param  integer $per_page   [description]
+		 * @param  integer $page       [description]
+		 * @param  string  $sort_by    [description]
+		 * @param  string  $sort_order [description]
+		 * @return [type]              [description]
+		 */
     public function list_requests($per_page = 100, $page = 1, $sort_by = '', $sort_order = 'desc' ){
 			$args = array(
 				'per_page' => $per_page,
@@ -453,63 +603,196 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 			return $this->run( 'requests', $args );
     }
 
-    public function search_requests(){
+		public function list_open_requests( $per_page = 100, $page = 1, $sort_by = '', $sort_order = 'desc' ){
+			$args = array(
+				'per_page' => $per_page,
+				'page' => $page,
+			);
 
+			if( $sort_by !== '' ){
+				$args['sort_by'] = $sort_by;
+				$args['sort_order'] = $sort_order;
+			}
+			return $this->run( 'requests/open', $args );
+		}
+
+		public function list_hold_requests( $per_page = 100, $page = 1, $sort_by = '', $sort_order = 'desc' ){
+			$args = array(
+				'per_page' => $per_page,
+				'page' => $page,
+			);
+
+			if( $sort_by !== '' ){
+				$args['sort_by'] = $sort_by;
+				$args['sort_order'] = $sort_order;
+			}
+
+			return $this->run( 'requests/hold', $args );
+		}
+
+		/**
+		 * Format for statuses: comma separated list (string) of statuses to browse through.
+		 *
+		 * @param  [type] $statuses
+		 * @param  array  $zendesk_pagination Zendesk pagination tool.
+		 * @return [type]              [description]
+		 */
+		public function list_requests_by_status( $statuses, $zendesk_pagination = null ){
+			if( null === $zendesk_pagination ){
+				$zendesk_pagination = $this->build_zendesk_pagination();
+			}
+
+			$args = array_merge( $zendesk_pagination, array(
+				'status' => $statuses,
+			));
+
+			return $this->run( 'requests', $args );
+		}
+
+		public function list_requests_by_user( $user_id, $zendesk_pagination = null ){
+			if( null === $zendesk_pagination ){
+				$zendesk_pagination = $this->build_zendesk_pagination();
+			}
+
+			return $this->run( "users/$user_id/requests", $zendesk_pagination );
+		}
+
+		public function list_requests_by_organization( $zendesk_pagination = null ){
+			if( null === $zendesk_pagination ){
+				$zendesk_pagination = $this->build_zendesk_pagination();
+			}
+
+			return $this->run( "organizations/$org_id/requests", $zendesk_pagination );
+		}
+
+		/**
+		 * Search requests.
+		 *
+		 * GET /api/v2/requests/search.json?query=camera
+		 * GET /api/v2/requests/search.json?query=camera&organization_id=1
+		 * GET /api/v2/requests/search.json?query=camera&cc_id=true
+		 * GET /api/v2/requests/search.json?query=camera&status=hold,open
+		 *
+		 * @param  [type] $query              [description]
+		 * @param  [type] $zendesk_pagination
+		 * @return [type]                     [description]
+		 */
+    public function search_requests( $query, $zendesk_pagination = null ){
+			if( null === $zendesk_pagination ){
+				$zendesk_pagination = $this->build_zendesk_pagination();
+			}
+
+			$args = array_merge( $zendesk_pagination, array(
+				'query' => $query
+			));
+
+			return $this->run( 'requests/search', $args );
     }
 
+		/**
+		 * Show a single request.
+		 *
+		 * @link https://developer.zendesk.com/rest_api/docs/core/requests#show-request
+		 * @param  [type] $request_id [description]
+		 * @return [type]             [description]
+		 */
     public function show_request( $request_id ){
 			return $this->run( 'requests/' . $request_id );
     }
 
-		public function build_zendesk_request( $subject = '', $description = '', $comment = '', $status = '', $requester_id = '' ){
-			$request = array(
-				'request' => array()
-			);
+		/**
+		 * Build a request (following the zendesk API structure).
+		 *
+		 * @param  string $subject     [description]
+		 * @param  string $description [description]
+		 * @param  string $comment     [description]
+		 * @param  array  $other       [description]
+		 * @param  bool   $raw
+		 * @return [type]              [description]
+		 */
+		public function build_zendesk_request( $subject = '', $description = '', $comment = '', $other = array(), $raw = false ){
+			$request = array();
 
 			if( $subject != '' ){
-				$request['request']['subject'] = $subject;
+				$request['subject'] = $subject;
 			}
 			if( $description != '' ){
-				$request['request']['description'] = $description;
+				$request['description'] = $description;
 			}
 			if( $comment != '' ){
-				$request['request']['comment']['body'] = $comment;
-			}
-			if( $status != '' ){
-				$request['request']['status'] = $status;
-			}
-			if( $requester_id != '' ){
-				$request['request']['requester_id'] = $requester_id;
+				$request['comment']['body'] = $comment;
 			}
 
-			return $request;
+			if( !empty( $other ) ){
+				foreach( $other as $key => $val ){
+					$request[$key] = $val;
+				}
+			}
+
+			if( $raw ){
+				return $request;
+			}
+
+			return array( 'request' => $request );
 		}
 
-		// Call build request, must fill out subject and description, should fill out requester
+		/**
+		 * Call build request, must fill out subject and description, should fill out requester.
+		 *
+		 * If not defined and not admin, then will be set to whoever is authenticated.
+		 *
+		 * @link https://developer.zendesk.com/rest_api/docs/core/requests#create-request
+		 * @param  [type] $request [description]
+		 * @return [type]          [description]
+		 */
     public function create_request( $request ){
 			return $this->run( 'requests', $request, 'POST' );
     }
 
-		// Call build_request, recommended fill out comment, can fill out status
-		// This function is mostly used for adding a comment.
+		/**
+		 * Call build_request, recommended fill out comment, can fill out status
+		 * This function is mostly used for adding a comment.
+		 *
+		 * @link https://developer.zendesk.com/rest_api/docs/core/requests#update-request
+		 * @param  [type] $request_id [description]
+		 * @param  [type] $request    [description]
+		 * @return [type]             [description]
+		 */
     public function update_request( $request_id, $request ){
 			return $this->run( 'requests/' . $request_id, $request, 'PUT' );
     }
 
-    public function set_collaborators_request(){
+		/**
+		 * Lists comments from a request.
+		 *
+		 * I BELIEVE it will not list private comments.
+		 *
+		 * Not totally sure.
+		 *
+		 * Please test.
+		 *
+		 * @link https://developer.zendesk.com/rest_api/docs/core/requests#listing-comments
+		 * @param  [type] $request_id [description]
+		 * @return [type]             [description]
+		 */
+    public function list_comments_request( $request_id, $zendesk_pagination = null ){
+			if( null === $zendesk_pagination ){
+				$zendesk_pagination = $this->build_zendesk_pagination();
+			}
 
+			return $this->run( "requests/$request_id/comments", $zendesk_pagination );
     }
 
-    public function add_collaborators_request(){
-
-    }
-
-    public function list_comments_request(){
-
-    }
-
-    public function get_comment_request(){
-
+		/**
+		 * Get a specific comment.
+		 *
+		 * @link https://developer.zendesk.com/rest_api/docs/core/requests#getting-comments
+		 * @param  [type] $request_id [description]
+		 * @param  [type] $comment_id [description]
+		 * @return [type]             [description]
+		 */
+    public function get_comment_request( $request_id, $comment_id ){
+			return $this->run( "requests/$request_id/comments/$comment_id" );
     }
 
     /* Attachments */
@@ -533,26 +816,111 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
       return $this->run( $route, $body, 'POST', false );
     }
 
-    public function delete_upload(){
-
+		/**
+		 * Delete an upload.
+		 *
+		 * @link https://developer.zendesk.com/rest_api/docs/core/attachments#delete-upload
+		 * @param  [type] $token [description]
+		 * @return [type]        [description]
+		 */
+    public function delete_upload( $token ){
+			return $this->run( "uploads/$token", array(), 'DELETE' );
     }
 
-    public function redact_comment_attachment(){
-
+		/**
+		 * Redaction allows you to permanently remove attachments from an existing
+		 * comment on a ticket. Once removed from a comment, the attachment is replaced
+		 * with a placeholder "redacted.txt" file.
+		 *
+		 * Note that redaction is permanent. It is not possible to undo redaction or
+		 * see what was removed. Once a ticket is closed, redacting its attachments
+		 * is no longer possible.
+		 *
+		 * @link https://developer.zendesk.com/rest_api/docs/core/attachments#redact-comment-attachment
+		 * @return [type] [description]
+		 */
+    public function redact_comment_attachment( $ticket_id, $comment_id, $attachment_id ){
+			return $this->run( "tickets/$ticket_id/comments/$comment_id/attachments/$attachment_id/redact", array(), 'PUT' );
     }
 
     /* Satisfaction Ratings */
 
-    public function list_satisfaction_ratings(){
+		/**
+		 * List satisfcation ratings
+		 *
+		 * @link https://developer.zendesk.com/rest_api/docs/core/satisfaction_ratings#list-satisfaction-ratings
+		 * @param  string $score              received, received_with_comment, received_without_comment,
+		 *                                    good, good_with_comment, good_without_comment,
+		 *                                    bad, bad_with_comment, bad_without_comment
+		 * @param  string $start_time         Time of the oldest satisfaction rating, as
+		 *                                    a Unix epoch time
+		 * @param  string $end_time           Time of the most recent satisfaction rating,
+		 *                                    as a Unix epoch time
+		 * @param  [type] $zendesk_pagination [description]
+		 * @return [type]                     [description]
+		 */
+    public function list_satisfaction_ratings( $score = '', $start_time = '', $end_time = '', $zendesk_pagination = null ){
+			if( null === $zendesk_pagination ){
+				$zendesk_pagination = $this->build_zendesk_pagination();
+			}
 
+			$args = $zendesk_pagination;
+
+			if( '' !== $score ){
+				$args['score'] = $score;
+			}
+
+			if( '' !== $start_time ){
+				$args['start_time'] = $start_time;
+			}
+
+			if( '' !== $end_time ){
+				$args['end_time'] = $end_time;
+			}
+
+			return $this->run( 'satisfaction_ratings', $args );
     }
 
-    public function show_satisfaction_rating(){
-
+		/**
+		 * Show satisfaction rating.
+		 *
+		 * Returns a specific satisfaction rating. You can get the id from the List
+		 * Satisfaction Ratings endpoint.
+		 *
+		 * @link https://developer.zendesk.com/rest_api/docs/core/satisfaction_ratings#show-satisfaction-rating
+		 * @param  string $rating_id [description]
+		 * @return [type] [description]
+		 */
+    public function show_satisfaction_rating( $rating_id ){
+			return $this->run( "satisfaction_ratings/$rating_id" );
     }
 
-    public function create_satisfaction_rating(){
+		/**
+		 * Create a satisfaction rating.
+		 *
+		 * Creates a CSAT rating for solved tickets, or for tickets that were
+		 * previously solved and then reopened.
+		 *
+		 * The end user must be a verified user, and the person who requested the ticket.
+		 *
+		 * @link https://developer.zendesk.com/rest_api/docs/core/satisfaction_ratings#create-a-satisfaction-rating
+		 * @param  [type] $ticket_id  [description]
+		 * @param  [type] $score      [description]
+		 * @param  string $comment    [description]
+		 * @param  string $sort_order [description]
+		 * @return [type]             [description]
+		 */
+    public function create_satisfaction_rating( $ticket_id, $score, $comment = '', $sort_order = 'asc' ){
+			$args = array(
+				'score' => $score,
+				'sort_order' => $sort_order,
+			);
 
+			if( '' !== $comment ){
+				$args['comment'] = $comment;
+			}
+
+			return $this->run( "tickets/$ticket_id/satisfaction_rating", $args, 'POST' );
     }
 
     /* Satisfaction Reasons */
@@ -868,7 +1236,6 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 			return array( 'organization_memberships' => array( 'user_id' => $user_id, 'organization_id' => $org_id ) ); // example
 		}
 
-		// Huh, won't actually delete them. Neat.
 		public function create_many_memberships( $memberships ){
 			return $this->run( "organization_memberships/create_many", $memberships, "POST" );
 		}

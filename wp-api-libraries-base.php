@@ -49,6 +49,7 @@ if( !class_exists( 'WpLibrariesBase' ) ) {
 		protected function fetch(){
 
 			$response = wp_remote_request( $this->base_uri . $this->route, $this->args );
+
 			// Retrieve status code and body.
 			$code = wp_remote_retrieve_response_code( $response );
 			$body = json_decode( wp_remote_retrieve_body( $response ) );
