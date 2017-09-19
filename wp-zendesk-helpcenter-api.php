@@ -1018,21 +1018,21 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 
 		/* https://developer.zendesk.com/rest_api/docs/help_center/post_comments#post-comments */
 
-		public function list_post_comments( $post_id, $include = '', $pages = null ) {
+		public function list_post_comments( $post_id, $include = array(), $pages = null ) {
 			if( null === $pages ){
 				$pages = $this->build_zendesk_pagination();
 			}
 			return $this->run( "community/posts/$post_id/comments", array_merge( array( 'include' => $includes ), $pages ) );
 		}
 
-		public function list_post_comments_by_user( $user_id, $include = '', $pages = null  ) {
+		public function list_post_comments_by_user( $user_id, $include = array(), $pages = null  ) {
 			if( null === $pages ){
 				$pages = $this->build_zendesk_pagination();
 			}
 			return $this->run( "community/users/$user_id/comments", array_merge( array( 'include' => $includes ), $pages ) );
 		}
 
-		public function show_post_comment( $post_id, $comment_id, $include = '' ) {
+		public function show_post_comment( $post_id, $comment_id, $include = array() ) {
 			return $this->run( "community/posts/$post_id/comments/$comment_id", array( 'include' => $includes ) );
 		}
 
@@ -1077,135 +1077,400 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 
 		/* SUBSCRIPTIONS. */
 
-		public function get_article_subscriptions( $article_id, $locale = 'en-us', $include = '' ) {
+		// TODO: ADD THE HELP_CENTER PREFIX.
 
+		public function list_article_subscriptions( $article_id, $locale = 'en-us', $include = array() ) {
+			return $this->run( "help_center/$locale/articles/$article_id/subscriptions", $include );
 		}
 
-		public function get_article_subscription( $subscription_id, $article_id, $locale = 'en-us', $include = '' ) {
-
+		public function show_article_subscription( $subscription_id, $article_id, $locale = 'en-us', $include = array() ) {
+			return $this->run( "help_center/$locale/articles/$article_id/subscriptions/$subscription_id", $include );
 		}
 
-		public function add_article_subscription( $article_id ) {
+		/**
+		 * Create article subscription.
+		 *
+		 * Creates a subscription to a given article.
+		 *
+		 * Designed for end users, but.
+		 * Agents with the Help Center manager role can optionally supply a user_id value.
+		 * If provided, the user associated with user_id will be subscribed to the article.
+		 *
+		 * @link https://developer.zendesk.com/rest_api/docs/help_center/subscriptions#create-article-subscription
+		 * @param  [type] $article_id    [description]
+		 * @param  string $source_locale [description]
+		 * @param  string $user_id       [description]
+		 * @return [type]                [description]
+		 */
+		public function create_article_subscription( $article_id, $source_locale = 'en-us', $user_id = '' ) {
+			$args = array(
+				'subscription' => array(
+					'source_locale' => $source_locale
+				)
+			);
 
+			if( '' !== $user_id ){
+				$args['subscription']['user_id'] = $user_id;
+			}
+
+			return $this->run( "help_center/articles/$article_id/subscriptions", $args, 'POST' );
 		}
 
+		/**
+		 * Designed for end-users
+		 *
+		 * @link https://developer.zendesk.com/rest_api/docs/help_center/subscriptions#delete-article-subscription
+		 * @param  [type] $article_id      [description]
+		 * @param  [type] $subscription_id [description]
+		 * @return [type]                  [description]
+		 */
 		public function delete_article_subscription( $article_id, $subscription_id ) {
-
+			return $this->run( "help_center/articles/$article_id/subscriptions/$subscription_id", array(), 'DELETE' );
 		}
 
-		public function list_section_subscriptions( $section_id, $locale = 'en-us', $include = '' ) {
+		/**
+		 * List section subscriptions
+		 *
+		 * Lists the subscriptions to a given section.
+		 *
+		 * The {locale} is required only for end users. Admins and agents can omit it.
+		 *
+		 * For end-users, the response will list only the subscriptions created by
+		 * the requesting end-user.
+		 *
+		 * @param  [type] $section_id [description]
+		 * @param  string $locale     [description]
+		 * @param  string $include    [description]
+		 * @return [type]             [description]
+		 */
+		public function list_section_subscriptions( $section_id, $locale = 'en-us', $include = array(), $pages = null ) {
+			if( null === $pages ){
+				$pages = $this->build_zendesk_pagination();
+			}
 
+			$pages = array_merge( $pages, $include );
+			return $this->run( "help_center/$locale/sections/$section_id/subscriptions", $pages );
 		}
 
-		public function show_section_subscription( $section_id, $subscription_id, $locale = 'en-us', $include = '' ) {
-
+		/**
+		 * Show section subscription.
+		 *
+		 * The {locale} is required only for end users. Admins and agents can omit it.
+		 *
+		 * @param  [type] $section_id      [description]
+		 * @param  [type] $subscription_id [description]
+		 * @param  string $locale          [description]
+		 * @param  string $include         [description]
+		 * @return [type]                  [description]
+		 */
+		public function show_section_subscription( $section_id, $subscription_id, $locale = 'en-us', $include = array() ) {
+			return $this->run( "help_center/$locale/sections/$section_id/subscriptions/$subscription_id", $include );
 		}
 
-		public function add_section_subscription( $section_id, $include_comments = '', $user_id = '' ) {
+		/**
+		 * Create section subscription.
+		 *
+		 * Creates a subscription to a given section.
+		 *
+		 * Agents with the Help Center manager role can optionally supply a user_id value.
+		 * If provided, the user associated with user_id will be subscribed to the section.
+		 *
+		 * @link https://developer.zendesk.com/rest_api/docs/help_center/subscriptions#create-section-subscription
+		 * @param  [type] $section_id       [description]
+		 * @param  string $include_comments [description]
+		 * @param  string $user_id          [description]
+		 * @return [type]                   [description]
+		 */
+		public function create_section_subscription( $section_id, $locale = 'en-us', $include_comments = false, $user_id = '' ) {
+			$args = array(
+				'subscription' => array(
+					'source_locale' => $locale,
+					'include_comments' => $include_comments,
+				)
+			);
 
+			if( '' !== $user_id ){
+				$args['subscription']['user_id'] = $user_id;
+			}
+
+			return $this->run( "help_center/sections/$section_id/subscriptions", $args, 'POST' );
 		}
 
 		public function delete_section_subscription( $section_id, $subscription_id ) {
-
+			return $this->run( "help_center/sections/$section_id/subscriptions/$subscription_id", array(), 'DELETE' );
 		}
 
-		public function get_subscriptions_by_user( $user_id, $include = '' ) {
+		public function list_subscriptions_by_user( $user_id, $include = array(), $page = null ) {
+			if( null === $pages ){
+				$pages = $this->build_zendesk_pagination();
+			}
 
+			$pages = array_merge( $pages, $include );
+			return $this->run( "help_center/users/$user_id/subscriptions", $include );
 		}
 
-		public function get_post_subscriptions( $post_id, $include = '' ) {
+		public function list_subscriptions_by_post( $post_id, $include = array(), $page = null ) {
+			if( null === $pages ){
+				$pages = $this->build_zendesk_pagination();
+			}
 
+			$pages = array_merge( $pages, $include );
+			return $this->run( "community/posts/$post_id/subscriptions", $include );
 		}
 
-		public function get_post_subscription( $post_id, $subscription_id, $include = '' ) {
-
+		public function show_post_subscription( $post_id, $subscription_id, $include = array() ) {
+			return $this->run( "community/posts/$post_id/subscriptions/$subscription_id", $include );
 		}
 
-		public function add_post_subscription( $post_id ) {
+		public function create_post_subscription( $post_id, $user_id = '' ) {
+			$args = array();
 
+			if( '' !== $user_id ){
+				$args['subscription'] = array( 'user_id' => $user_id );
+			}
+
+			return $this->run( "community/posts/$post_id/subscriptions", $args, 'POST' );
 		}
 
 		public function delete_post_subscription( $post_id, $subscription_id ) {
-
+			return $this->run( "community/posts/$post_id/subscriptions/$subscription_id", array(), 'DELETE' );
 		}
 
-		public function get_topic_subscriptions( $topic_id, $include = '' ) {
+		public function list_topic_subscriptions( $topic_id, $include = array(), $pages = null ) {
+			if( null === $pages ){
+				$pages = $this->build_zendesk_pagination();
+			}
 
+			$pages = array_merge( $pages, $include );
+			return $this->run( "community/topics/$topic_id/subscriptions", $pages );
 		}
 
-		public function get_topic_subscription( $topic_id, $subscription_id, $include = '' ) {
-
+		public function show_topic_subscription( $topic_id, $subscription_id, $include = array() ) {
+			return $this->run( "community/topics/$topic_id/subscriptions/$subscription_id", $include );
 		}
 
-		public function add_topic_subscription( $topic_id ) {
+		public function create_topic_subscription( $topic_id, $include_comments = false, $user_id = '' ) {
+			$args = array(
+				'subscription' => array(
+					'include_comments' => $include_comments
+				)
+			);
 
+			if( '' !== $user_id ){
+				$args['subscription']['user_id'] = $user_id;
+			}
+
+			return $this->run( "community/topics/$topic_id/subscriptions", $args, 'POST' );
+		}
+
+		public function update_topic_subscription( $topic_id, $include_comments ){
+			return $this->run( "community/topics/$topic_id/subscriptions", array( 'subscription' => array( 'include_comments' => $include_comments ) ), 'PUT' );
 		}
 
 		public function delete_topic_subscription( $topic_id, $subscription_id ) {
-
+			return $this->run( "community/topics/$topic_id/subscriptions/$subscription_id", array(), 'DELETE' );
 		}
-
 
 		/* VOTES. */
 
-		public function get_user_votes( $user_id ) {
-
+		/**
+		 * To view own votes, use 'me' as $user_id.
+		 * @param  [type] $user_id [description]
+		 * @return [type]          [description]
+		 */
+		public function list_votes_by_user( $user_id, $pages = null ) {
+			if( null === $pages ){
+				$pages = $this->build_zendesk_pagination();
+			}
+			return $this->run( "help_center/users/$user_id/votes", $pages );
 		}
 
-		public function get_article_votes( $article_id, $locale = 'en-us', $include = '' ) {
+		public function list_votes_by_article( $article_id, $locale = 'en-us', $include = array(), $pages = null ) {
+			if( null === $pages ){
+				$pages = $this->build_zendesk_pagination();
+			}
 
+			$include = array_merge( $pages, $include );
+			return $this->run( "help_center/$locale/articles/$article_id/votes", $include);
 		}
 
-		public function get_article_comment_votes( $article_id, $comment_id, $locale = 'en-us', $include = '' ) {
+		public function list_votes_by_article_comments( $article_id, $comment_id, $locale = 'en-us', $include = array(), $pages = null ) {
+			if( null === $pages ){
+				$pages = $this->build_zendesk_pagination();
+			}
 
+			$include = array_merge( $pages, $include );
+			return $this->run( "help_center/$locale/articles/$article_id/comments/$comment_id/votes", $include );
 		}
 
-		public function get_posts_votes( $post_id, $include = '' ) {
+		public function list_votes_by_post( $post_id, $include = array(), $pages = null ) {
+			if( null === $pages ){
+				$pages = $this->build_zendesk_pagination();
+			}
 
+			$include = array_merge( $pages, $include );
+			return $this->run( "community/posts/$post_id/votes", $include );
 		}
 
-		public function get_post_comment_votes( $post_id, $comment_id, $include = '' ) {
+		public function get_post_comment_votes( $post_id, $comment_id, $include = array(), $pages = null ) {
+			if( null === $pages ){
+				$pages = $this->build_zendesk_pagination();
+			}
 
+			$include = array_merge( $pages, $include );
+			return $this->run( "community/posts/$post_id/comments/$comment_id/votes", $include );
 		}
 
-		public function get_vote( $vote_id, $include = '' ) {
+		public function show_vote( $vote_id, $include = array() ) {
+			return $this->run( "help_center/votes/$vote_id", $include );
+		}
 
+		public function create_article_vote_up( $article_id, $created_at = '', $user_id = '' ) {
+			$args = array();
+
+			if( '' !== $user_id ){
+				$args['vote'] = array( 'user_id' => $user_id );
+			}
+
+			if( '' !== $created_at ){
+				if( isset( $args['vote'] ) ){
+					$args['vote']['created_at'] = $created_at;
+				}else{
+					$args['vote'] = array( 'created_at' => $created_at );
+				}
+			}
+
+			return $this->run( "help_center/articles/$article_id/up", $args, 'POST' );
+		}
+
+		public function create_article_vote_down( $article_id, $created_at = '', $user_id = '' ) {
+			$args = array();
+
+			if( '' !== $user_id ){
+				$args['vote'] = array( 'user_id' => $user_id );
+			}
+
+			if( '' !== $created_at ){
+				if( isset( $args['vote'] ) ){
+					$args['vote']['created_at'] = $created_at;
+				}else{
+					$args['vote'] = array( 'created_at' => $created_at );
+				}
+			}
+
+			return $this->run( "help_center/articles/$article_id/down", $args, 'POST' );
+		}
+
+		public function create_article_comment_vote_up( $article_id, $comment_id, $created_at = '', $user_id = '' ) {
+			$args = array();
+
+			if( '' !== $user_id ){
+				$args['vote'] = array( 'user_id' => $user_id );
+			}
+
+			if( '' !== $created_at ){
+				if( isset( $args['vote'] ) ){
+					$args['vote']['created_at'] = $created_at;
+				}else{
+					$args['vote'] = array( 'created_at' => $created_at );
+				}
+			}
+
+			return $this->run( "help_center/articldes/$article_id/comments/$comment_id/up", $args, 'POST' );
+		}
+
+		public function create_article_comment_vote_down( $article_id, $comment_id, $created_at = '', $user_id = '' ) {
+			$args = array();
+
+			if( '' !== $user_id ){
+				$args['vote'] = array( 'user_id' => $user_id );
+			}
+
+			if( '' !== $created_at ){
+				if( isset( $args['vote'] ) ){
+					$args['vote']['created_at'] = $created_at;
+				}else{
+					$args['vote'] = array( 'created_at' => $created_at );
+				}
+			}
+
+			return $this->run( "help_center/articldes/$article_id/comments/$comment_id/down", $args, 'POST' );
+		}
+
+		public function create_post_vote_up( $post_id, $created_at = '', $user_id = '' ) {
+			$args = array();
+
+			if( '' !== $user_id ){
+				$args['vote'] = array( 'user_id' => $user_id );
+			}
+
+			if( '' !== $created_at ){
+				if( isset( $args['vote'] ) ){
+					$args['vote']['created_at'] = $created_at;
+				}else{
+					$args['vote'] = array( 'created_at' => $created_at );
+				}
+			}
+
+			return $this->run( "community/posts/$post_id/up", $args, 'POST' );
+		}
+
+		public function create_post_vote_down( $post_id, $created_at = '', $user_id = '' ) {
+			$args = array();
+
+			if( '' !== $user_id ){
+				$args['vote'] = array( 'user_id' => $user_id );
+			}
+
+			if( '' !== $created_at ){
+				if( isset( $args['vote'] ) ){
+					$args['vote']['created_at'] = $created_at;
+				}else{
+					$args['vote'] = array( 'created_at' => $created_at );
+				}
+			}
+
+			return $this->run( "community/posts/$post_id/down", $args, 'POST' );
+		}
+
+		public function create_post_comment_vote_up( $post_id, $comment_id, $created_at = '', $user_id = '' ) {
+			$args = array();
+
+			if( '' !== $user_id ){
+				$args['vote'] = array( 'user_id' => $user_id );
+			}
+
+			if( '' !== $created_at ){
+				if( isset( $args['vote'] ) ){
+					$args['vote']['created_at'] = $created_at;
+				}else{
+					$args['vote'] = array( 'created_at' => $created_at );
+				}
+			}
+
+			return $this->run( "community/posts/$post_id/comments/$comment_id/up", $args, 'POST' );
+		}
+
+		public function create_post_comment_vote_down( $post_id, $comment_id, $created_at = '', $user_id = '' ) {
+			$args = array();
+
+			if( '' !== $user_id ){
+				$args['vote'] = array( 'user_id' => $user_id );
+			}
+
+			if( '' !== $created_at ){
+				if( isset( $args['vote'] ) ){
+					$args['vote']['created_at'] = $created_at;
+				}else{
+					$args['vote'] = array( 'created_at' => $created_at );
+				}
+			}
+
+			return $this->run( "community/posts/$post_id/comments/$comment_id/down", $args, 'POST' );
 		}
 
 		public function delete_vote( $vote_id ) {
-
-		}
-
-		public function add_article_vote_up( $article_id ) {
-
-		}
-
-		public function add_article_vote_down( $article_id ) {
-
-		}
-
-		public function add_article_comments_vote_up( $article_id, $comment_id ) {
-
-		}
-
-		public function add_article_comments_vote_down( $article_id, $comment_id ) {
-
-		}
-
-		public function add_post_vote_up( $post_id ) {
-
-		}
-
-		public function add_post_vote_down( $post_id ) {
-
-		}
-
-		public function add_post_comments_vote_up( $post_id, $comment_id ) {
-
-		}
-
-		public function add_post_comments_vote_down( $post_id, $comment_id ) {
-
+			return $this->run( "help_center/votes/$vote_id", array(), 'DELETE' );
 		}
 
 		/* ACCESS POLICIES. */
