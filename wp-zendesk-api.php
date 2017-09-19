@@ -214,6 +214,19 @@ if( ! class_exists( 'WpZendeskAPI' ) ){
 					// Ie: more expensive or frequent calls could be cached longer, such as
 					// pinging the search API.
 					//
+					// OK lets think about this.
+					//
+					// Things that WON'T change very often unless modified (which again, not often).
+					// 	 get_user
+					//	 list_groups
+					//	 memberships
+					//
+					// Other stuff I'm sure.
+					//
+					// But, eh. I guess 60 seconds is good enough for now.
+					//
+					// A big thing todo though, would be on certain functions clearing a transient.
+					//
 					// Heck I could get clever with this. Perhaps when updating a ticket delete
 					// its transient, and this would allow me to have a longer expiration date.
 
