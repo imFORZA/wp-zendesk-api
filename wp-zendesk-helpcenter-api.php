@@ -1476,53 +1476,173 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		/* ACCESS POLICIES. */
 
 		public function get_section_access_policy( $section_id ) {
-
+			return $this->run( "help_center/sections/$section_id/accesspolicy" );
 		}
 
 		public function get_topic_access_policy( $topic_id ) {
-
+			return $this->run( "community/topics/$topic_id/access_policy" );
 		}
 
-		public function update_section_access_policy( $section_id ) {
+		/**
+		 * Update a section's access policy.
+		 *
+		 * @param  string $section_id              The identifier of the section.
+		 * @param  string $viewable_by             Can be 'everybody', 'signed_in_users', and 'staff'.
+		 * @param  string $manageable_by           Can be 'staff' and 'managers'.
+		 * @param  array  $restricted_to_group_ids If empty, no restriction.
+		 * @param  array  $restricted_to_org_ids   If empty, no restriction.
+		 * @param  array  $requred_tags            A user must have ALL listed tags to have access.
+		 * @return [type]                          [description]
+		 */
+		public function update_section_access_policy( $section_id, $viewable_by = '', $manageable_by = '', $restricted_to_group_ids = array(), $restricted_to_org_ids = array(), $required_tags = array() ) {
 
+			$args = array();
+
+			if( '' !== $viewable_by ){
+				$args['viewable_by'] = $viewable_by;
+			}
+
+			if( '' !== $manageable_by ){
+				$args['manageable_by'] = $manageable_by;
+			}
+
+			if( !empty( $restricted_to_group_ids ) ){
+				$args['restricted_to_group_ids'] = $restricted_to_group_ids;
+			}
+
+			if( !empty( $restricted_to_org_ids ) ){
+				$args['restricted_to_org_ids'] = $restricted_to_org_ids;
+			}
+
+			if( !empty( $required_tags ) ){
+				$args['required_tags'] = $required_tags;
+			}
+
+			return $this->run( "help_center/sections/$section_id/access_policy", $args, 'PUT' );
 		}
 
-		public function update_topic_access_policy( $topic_id ) {
+		/**
+		 * Update a section's access policy.
+		 *
+		 * @param  string $section_id              The identifier of the section.
+		 * @param  string $viewable_by             Can be 'everybody', 'signed_in_users', and 'staff'.
+		 * @param  string $manageable_by           Can be 'staff' and 'managers'.
+		 * @param  array  $restricted_to_group_ids If empty, no restriction.
+		 * @param  array  $restricted_to_org_ids   If empty, no restriction.
+		 * @param  array  $requred_tags            A user must have ALL listed tags to have access.
+		 * @return [type]                          [description]
+		 */
+		public function update_topic_access_policy( $topic_id, $viewable_by = '', $manageable_by = '', $restricted_to_group_ids = array(), $restricted_to_org_ids = array(), $required_tags = array()  ) {
 
+			$args = array();
+
+			if( '' !== $viewable_by ){
+				$args['viewable_by'] = $viewable_by;
+			}
+
+			if( '' !== $manageable_by ){
+				$args['manageable_by'] = $manageable_by;
+			}
+
+			if( !empty( $restricted_to_group_ids ) ){
+				$args['restricted_to_group_ids'] = $restricted_to_group_ids;
+			}
+
+			if( !empty( $restricted_to_org_ids ) ){
+				$args['restricted_to_org_ids'] = $restricted_to_org_ids;
+			}
+
+			if( !empty( $required_tags ) ){
+				$args['required_tags'] = $required_tags;
+			}
+
+			return $this->run( "community/topics/$topic_id/access_policy", $args, 'PUT' );
 		}
 
-		/* USER SEGMENTS. */
+		/* USER SEGMENTS: https://developer.zendesk.com/rest_api/docs/help_center/user_segments	*/
 
-		public function get_user_segments() {
+		public function list_user_segments( $pages = null ) {
+			if( null !== $pages ){
+				$pages = $this->build_zendesk_pagination();
+			}
 
+			return $this->run( 'help_center/user_segments', $pages );
 		}
 
-		public function get_user_segments_applicable() {
+		public function list_user_segments_applicable( $pages = null ) {
+			if( null !== $pages ){
+				$pages = $this->build_zendesk_pagination();
+			}
 
+			return $this->run( 'help_center/user_segments/applicable', $pages );
 		}
 
-		public function get_user_segment( $user_segment_id ) {
-
+		public function show_user_segment( $user_segment_id ) {
+			return $this->run( "help_center/user_segments/$user_segment_id" );
 		}
 
-		public function get_sections_with_user_segment( $user_segment_id ) {
+		public function list_sections_with_user_segment( $user_segment_id, $pages = null ) {
+			if( null !== $pages ){
+				$pages = $this->build_zendesk_pagination();
+			}
 
+			return $this->run( "help_center/user_segments/$user_segment_id/sections", $pages );
 		}
 
-		public function get_topics_with_user_segment( $user_segment_id ) {
+		public function list_topics_with_user_segment( $user_segment_id, $pages = null ) {
+			if( null !== $pages ){
+				$pages = $this->build_zendesk_pagination();
+			}
 
+			return $this->run( "help_center/user_segments/$user_segment_id/topics", $pages );
 		}
 
-		public function add_user_segments() {
+		/**
+		 * Create a user segment.
+		 *
+		 * @link https://developer.zendesk.com/rest_api/docs/help_center/user_segments#create-user-segment
+		 * @link https://developer.zendesk.com/rest_api/docs/help_center/user_segments#json-format
+		 * @param  [type] $user_type [description]
+		 * @param  array  $other     [description]
+		 * @return [type]            [description]
+		 */
+		public function create_user_segment( $user_type, $other = array() ) {
+			$args = array(
+				'user_type' => $user_type,
+			);
 
+			if( !empty( $other ) ){
+				foreach( $other as $key => $val ){
+					$args[$key] = $val;
+				}
+			}
+
+			return $this->run( "help_center/user_segments", array( 'user_segment' => $args ), 'POST' );
 		}
 
-		public function update_user_segment( $user_segment_id ) {
+		/**
+		 * Update a user segment.
+		 *
+		 * @link https://developer.zendesk.com/rest_api/docs/help_center/user_segments#create-user-segment
+		 * @link https://developer.zendesk.com/rest_api/docs/help_center/user_segments#json-format
+		 * @param  string $user_segment_id
+		 * @param  array  $other           [description]
+		 * @return [type]                  [description]
+		 */
+		public function update_user_segment( $user_segment_id, $other = array() ) {
+			$args = array();
 
+			if( !empty( $other ) ){
+				foreach( $other as $key => $val ){
+					$args[$key] = $val;
+				}
+			}
+
+			return $this->run( "help_center/user_segments/$user_segment_id", $args, 'PUT' );
 		}
 
 		public function delete_user_segment( $user_segment_id ) {
-
+			return $this->run( "help_center/user_segments/$user_segment_id", array(), 'DELETE' );
 		}
 
 	}
