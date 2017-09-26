@@ -106,7 +106,7 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 		 * @access public
 		 * @param mixed $username
 		 * @param mixed $password
-		 * @param bool $validate (default: true)
+		 * @param bool  $validate (default: true)
 		 * @return void
 		 */
 		public function authenticate( $username, $password, $validate = true ) {
@@ -135,7 +135,7 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 			}
 		}
 
-	 /*
+		/*
 		* Authentication Helper
 		* set username and password to false
 		* return new WP_Error
@@ -164,8 +164,14 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 		 * @return void
 		 */
 		public function is_ssl( $account ) {
-			$headers = array( 'Content-Type' => 'application/json' );
-			$result  = wp_remote_head( trailingslashit( 'https://' . $account . '.zendesk.com' ) . 'home.json', array( 'headers' => $headers ) );
+			$headers = array(
+				'Content-Type' => 'application/json',
+			);
+			$result  = wp_remote_head(
+				trailingslashit( 'https://' . $account . '.zendesk.com' ) . 'home.json', array(
+					'headers' => $headers,
+				)
+			);
 
 			// Let's see if there was a redirect
 			if ( ! is_wp_error( $result ) && $result['response']['code'] == 302 ) {
@@ -189,7 +195,7 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 
 		}
 
-		public function get_user_id_by_email( $email ){
+		public function get_user_id_by_email( $email ) {
 			$result = $this->_get( 'users/search.json?query=' . $email );
 
 			// return $result;
@@ -208,37 +214,36 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 		 * @param int $page (default: 1)
 		 * @return void
 		 */
-    public function list_tickets( $per_page = 100, $page = 1, $sort = '' ){
-      $request = 'tickets.json';
+		public function list_tickets( $per_page = 100, $page = 1, $sort = '' ) {
+			$request = 'tickets.json';
 
-      if ( $per_page != 100 ) {
-        $request .= '?per_page=' . $per_page;
+			if ( $per_page != 100 ) {
+				$request .= '?per_page=' . $per_page;
 
-        if( $page != 1 ){
-          $request .= '&page='.$page;
-        }
+				if ( $page != 1 ) {
+					$request .= '&page=' . $page;
+				}
 
-        if( $sort != '' ){
-          $request .= '&sort_by='.$sort;
-        }
-      }else if( $page != 1 ){
-        $request .= '?page='.$page;
+				if ( $sort != '' ) {
+					$request .= '&sort_by=' . $sort;
+				}
+			} elseif ( $page != 1 ) {
+				$request .= '?page=' . $page;
 
-        if( $sort != '' ){
-          $request .= '&sort_by='.$sort;
-        }
-      }
-      if( $sort != '' ){
-        $request .= '?sort_by='.$sort;
-      }
-
+				if ( $sort != '' ) {
+					$request .= '&sort_by=' . $sort;
+				}
+			}
+			if ( $sort != '' ) {
+				$request .= '?sort_by=' . $sort;
+			}
 
 			$result = $this->_get( $request );
 
 			return $this->checker( $result, __( 'Tickets cannot be accessed right now.', 'wp-zendesk-api' ) );
 		}
 
-		public function get_tickets_by_email( $email ){
+		public function get_tickets_by_email( $email ) {
 			$result = $this->_get( 'search.json?query=type:ticket requester:' . $email );
 
 			return $this->checker( $result, '' );
@@ -304,11 +309,11 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 				);
 			}
 
-			if( $tags != '' ){
-				$ticket['ticket']['tags'] = implode(',', $tags);
+			if ( $tags != '' ) {
+				$ticket['ticket']['tags'] = implode( ',', $tags );
 			}
 
-			if( $channel != '' ){
+			if ( $channel != '' ) {
 				$ticket['ticket']['via']['channel'] = $channel;
 			}
 
@@ -446,8 +451,8 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 				),
 			);
 
-			if( $requester_id !== '' ){
-				//$request['request']['requester_id'] = $requester_id;
+			if ( $requester_id !== '' ) {
+				// $request['request']['requester_id'] = $requester_id;
 			}
 
 			$headers = array();
@@ -516,7 +521,7 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 			return $this->checker( $result, __( 'A new comment could not be created at this time, please try again later.', 'wp-zendesk-api' ), true );
 		}
 
-		public function create_comment_request( $request_id, $text ){
+		public function create_comment_request( $request_id, $text ) {
 			$request = array(
 				'request' => array(
 					'comment' => array(
@@ -548,7 +553,11 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 
 				return $comments;
 			} else {
-				return new WP_Error( 'zendesk-api-error', __( 'Could not fetch the comments at this time, please try again later.', 'wp-zendesk-api' ), array( 'status' => $result['response']['code'] ) );
+				return new WP_Error(
+					'zendesk-api-error', __( 'Could not fetch the comments at this time, please try again later.', 'wp-zendesk-api' ), array(
+						'status' => $result['response']['code'],
+					)
+				);
 			}
 
 			return $comments; // como
@@ -823,7 +832,11 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 		 * @return void
 		 */
 		public function set_user_password( $user_id, $pass ) {
-			$result = $this->_post( 'users/' . $user_id . '/password.json', array( 'password' => $pass ) );
+			$result = $this->_post(
+				'users/' . $user_id . '/password.json', array(
+					'password' => $pass,
+				)
+			);
 
 			return $this->checker( $result, __( 'Password cannot be set right now.', 'wp-zendesk-api' ) );
 		}
@@ -893,11 +906,11 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 		/* GROUPS. */
 
 				/**
-		 * list_groups function.
-		 *
-		 * @access public
-		 * @return void
-		 */
+				 * list_groups function.
+				 *
+				 * @access public
+				 * @return void
+				 */
 		public function list_groups() {
 			$result = $this->_get( 'groups.json' );
 
@@ -1399,12 +1412,10 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 				);
 			}
 
-
-
 			if ( $this->api_key != false ) {
 				$headers = array(
 					'Authorization' => 'Basic ' . base64_encode( $this->username . '/token:' . $this->api_key ),
-					'Content-Type' 	=> 'application/json',
+					'Content-Type'  => 'application/json',
 				);
 			}
 
@@ -1459,13 +1470,11 @@ if ( ! class_exists( 'Zendesk_Wordpress_API' ) ) {
 			if ( $this->api_key != false ) {
 				$headers = array(
 					'Authorization' => 'Basic ' . base64_encode( $this->username . '/token:' . $this->api_key ),
-					'Content-Type' 	=> 'application/json',
+					'Content-Type'  => 'application/json',
 				);
 			}
 
-			error_log(print_r( $headers, true ));
-
-
+			error_log( print_r( $headers, true ) );
 
 			$headers    = array_merge( $headers, $extra_headers );
 			$target_url = trailingslashit( $this->api_url ) . $endpoint;

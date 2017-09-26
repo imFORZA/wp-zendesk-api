@@ -6,7 +6,8 @@
  */
 
 /* Exit if accessed directly */
-if ( ! defined( 'ABSPATH' ) ) { exit; }
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; }
 
 
 if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
@@ -45,25 +46,25 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @param mixed $api_key API Key.
 		 * @return void
 		 */
-		public function __construct( $domain, $username, $api_key, $debug = false ){
+		public function __construct( $domain, $username, $api_key, $debug = false ) {
 			$this->base_uri = "https://$domain.zendesk.com/api/v2/";
 			$this->username = $username;
 			$this->api_key = $api_key;
 			$this->is_debug = $debug;
 		}
 
-		protected function set_headers(){
+		protected function set_headers() {
 			$this->args['headers'] = array(
 				'Content-Type'  => 'application/json',
-				'Authorization' => 'Basic ' . base64_encode( $this->username . '/token:' . $this->api_key )
+				'Authorization' => 'Basic ' . base64_encode( $this->username . '/token:' . $this->api_key ),
 			);
 		}
 
-		protected function run( $route, $args = array(), $method = 'GET', $add_data_type = true ){
-			return $this->build_request( $route . ($add_data_type?'.json':''), $args, $method )->fetch();
+		protected function run( $route, $args = array(), $method = 'GET', $add_data_type = true ) {
+			return $this->build_request( $route . ($add_data_type ? '.json' : ''), $args, $method )->fetch();
 		}
 
-		protected function clear(){
+		protected function clear() {
 			$this->args = array();
 		}
 
@@ -76,13 +77,13 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @param  string  $sort_order [description]
 		 * @return [type]              [description]
 		 */
-		public function build_zendesk_pagination( $per_page = 100, $page = 1, $sort_by = '', $sort_order = 'desc' ){
+		public function build_zendesk_pagination( $per_page = 100, $page = 1, $sort_by = '', $sort_order = 'desc' ) {
 			$args = array(
 				'per_page' => $per_page,
 				'page' => $page,
 			);
 
-			if( $sort_by !== '' ){
+			if ( $sort_by !== '' ) {
 				$args['sort_by'] = $sort_by;
 				$args['sort_order'] = $sort_order;
 			}
@@ -115,7 +116,7 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 			$args = array(
 				'sort_by' => $sort_by,
 				'sort_order' => $sort_order,
-				'page' => $page
+				'page' => $page,
 			);
 
 			return $this->run( "help_center/$locale/categories", $args );
@@ -133,36 +134,38 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 			return $this->run( "help_center/$locale/categories/$category_id" );
 		}
 
-		public function build_zendesk_category( $name = '', $locale = '', $description = '', $position = '', $other = array(), $raw = false ){
+		public function build_zendesk_category( $name = '', $locale = '', $description = '', $position = '', $other = array(), $raw = false ) {
 			$cat = array();
 
-			if( '' !== $name ){
+			if ( '' !== $name ) {
 				$cat['name'] = $name;
 			}
 
-			if( '' !== $locale ){
+			if ( '' !== $locale ) {
 				$cat['locale'] = $locale;
 			}
 
-			if( '' !== $description ){
+			if ( '' !== $description ) {
 				$cat['description'] = $description;
 			}
 
-			if( '' !== $position && is_int( $position ) ){
+			if ( '' !== $position && is_int( $position ) ) {
 				$cat['position'] = $position;
 			}
 
-			if( !empty( $other ) ){
-				foreach( $other as $key => $val ){
-					$cat[$key] = $val;
+			if ( ! empty( $other ) ) {
+				foreach ( $other as $key => $val ) {
+					$cat[ $key ] = $val;
 				}
 			}
 
-			if( $raw ){
+			if ( $raw ) {
 				return $cat;
 			}
 
-			return array( 'category' => $cat );
+			return array(
+				'category' => $cat,
+			);
 		}
 
 		/**
@@ -173,9 +176,9 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @return [type]           [description]
 		 */
 		public function create_category( $category, $locale = 'en-us' ) {
-			if( isset( $category['locale'] ) ){
+			if ( isset( $category['locale'] ) ) {
 				return $this->run( 'categories', $category, 'POST' );
-			}else{
+			} else {
 				return $this->run( "help_center/$locale/categories", $category, 'POST' );
 			}
 		}
@@ -191,9 +194,9 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @return [type]              [description]
 		 */
 		public function update_category( $category_id, $category, $locale = '' ) {
-			if( '' !== $locale ){
+			if ( '' !== $locale ) {
 				return $this->run( "help_center/$locale/categories/$category_id", $category, 'PUT' );
-			}else{
+			} else {
 				return $this->run( "help_center/categories/$category_id", $category, 'PUT' );
 			}
 		}
@@ -207,7 +210,11 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @return [type]              [description]
 		 */
 		public function update_category_locale( $category_id, $updated_source_locale ) {
-			return $this->run( "help_center/categories/$category_id/source_locale", array( 'category_locale' => $updated_source_locale ), 'PUT' );
+			return $this->run(
+				"help_center/categories/$category_id/source_locale", array(
+					'category_locale' => $updated_source_locale,
+				), 'PUT'
+			);
 		}
 
 		/**
@@ -240,9 +247,9 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @return [type]              [description]
 		 */
 		public function list_sections( $section_id, $category_id = '', $locale = 'en-us' ) {
-			if( '' !== $category_id ){
+			if ( '' !== $category_id ) {
 				return $this->run( "help_center/$locale/categories/$category_id/sections" );
-			}else{
+			} else {
 				return $this->run( "help_center/$locale/sections" );
 			}
 		}
@@ -261,36 +268,38 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 			return $this->run( "help_center/$locale/sections/$section_id" );
 		}
 
-		public function build_zendesk_section( $name = '', $description = '', $locale = '', $position = '', $other = array(), $raw = false ){
+		public function build_zendesk_section( $name = '', $description = '', $locale = '', $position = '', $other = array(), $raw = false ) {
 			$sect = array();
 
-			if( '' !== $name ){
+			if ( '' !== $name ) {
 				$sect['name'] = $name;
 			}
 
-			if( '' !== $description ){
+			if ( '' !== $description ) {
 				$sect['description'] = $description;
 			}
 
-			if( '' !== $locale ){
+			if ( '' !== $locale ) {
 				$sect['locale'] = $locale;
 			}
 
-			if( '' !== $position ){
+			if ( '' !== $position ) {
 				$sect['position'] = $position;
 			}
 
-			if( !empty( $other ) ){
-				foreach( $other as $key => $val ){
-					$sect[$key] = $val;
+			if ( ! empty( $other ) ) {
+				foreach ( $other as $key => $val ) {
+					$sect[ $key ] = $val;
 				}
 			}
 
-			if( $raw ){
+			if ( $raw ) {
 				return $sect;
 			}
 
-			return array( 'section' => $sect );
+			return array(
+				'section' => $sect,
+			);
 		}
 
 		/**
@@ -308,9 +317,9 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @return [type]              [description]
 		 */
 		public function create_section( $category_id, $section, $locale = 'en-us' ) {
-			if( $locale == '' ){
+			if ( $locale == '' ) {
 				return $this->run( "help_center/categories/$category_id/sections", $section, 'POST' );
-			}else{
+			} else {
 				return $this->run( "help_center/$locale/categories/$category_id/sections", 'POST' );
 			}
 		}
@@ -328,9 +337,9 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @return [type]             [description]
 		 */
 		public function update_section( $section_id, $section, $locale = 'en-us' ) {
-			if( $locale == '' ){
+			if ( $locale == '' ) {
 				return $this->run( "help_center/sections/$section_id", $section, 'PUT' );
-			}else{
+			} else {
 				return $this->run( "help_center/$locale/sections/$setion_id", $section, 'PUT' );
 			}
 		}
@@ -347,7 +356,7 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @param  [type] $locale     [description]
 		 * @return [type]             [description]
 		 */
-		public function update_source_locale( $section_id, $locale ){
+		public function update_source_locale( $section_id, $locale ) {
 			return $this->run( "help_center/sections/$section_id/source_locale", array( 'section_locale', $locale ), 'PUT' );
 		}
 
@@ -385,11 +394,11 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @return [type]                     [description]
 		 */
 		public function list_articles( $locale = 'en-us', $label_names = '', $pages = null ) {
-			if( null === $pages ){
+			if ( null === $pages ) {
 				$pages = $this->build_zendesk_pagination();
 			}
 
-			if( '' !== $label_names ){
+			if ( '' !== $label_names ) {
 				$pages['label_names'] = $label_names;
 			}
 
@@ -397,11 +406,11 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		}
 
 		public function list_articles_by_category( $category_id, $locale = 'en-us', $label_names = '', $pages = null ) {
-			if( null === $pages ){
+			if ( null === $pages ) {
 				$pages = $this->build_zendesk_pagination();
 			}
 
-			if( '' !== $label_names ){
+			if ( '' !== $label_names ) {
 				$pages['label_names'] = $label_names;
 			}
 
@@ -409,11 +418,11 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		}
 
 		public function list_articles_by_section( $section_id, $locale = 'en-us', $label_names = '', $pages = null ) {
-			if( null === $pages ){
+			if ( null === $pages ) {
 				$pages = $this->build_zendesk_pagination();
 			}
 
-			if( '' !== $label_names ){
+			if ( '' !== $label_names ) {
 				$pages['label_names'] = $label_names;
 			}
 
@@ -421,11 +430,11 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		}
 
 		public function list_articles_by_user( $user_id, $label_names = '', $pages = null ) {
-			if( null === $pages ){
+			if ( null === $pages ) {
 				$pages = $this->build_zendesk_pagination();
 			}
 
-			if( '' !== $label_names ){
+			if ( '' !== $label_names ) {
 				$pages['label_names'] = $label_names;
 			}
 
@@ -433,15 +442,15 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		}
 
 		public function list_articles_by_incremental( $start_time, $label_names = '', $pages = null ) {
-			if( null === $pages ){
+			if ( null === $pages ) {
 				$pages = $this->build_zendesk_pagination();
 			}
 
-			if( '' !== $label_names ){
+			if ( '' !== $label_names ) {
 				$pages['label_names'] = $label_names;
 			}
 
-			return $this->run( "help_center/incremental/articles", $pages );
+			return $this->run( 'help_center/incremental/articles', $pages );
 		}
 
 		/**
@@ -454,37 +463,39 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @param  string $locale     [description]
 		 * @return [type]             [description]
 		 */
-		public function show_article( $article_id, $locale = 'en-us' ){
+		public function show_article( $article_id, $locale = 'en-us' ) {
 			return $this->run( "help_center/$locale/articles/$article_id" );
 		}
 
-		public function build_zendesk_article( $title = '', $body = '', $locale = '', $position = '', $other = array(), $raw = false){
+		public function build_zendesk_article( $title = '', $body = '', $locale = '', $position = '', $other = array(), $raw = false ) {
 			$art = array();
 
-			if( '' !== $title ){
+			if ( '' !== $title ) {
 				$art['title'] = $title;
 			}
-			if( '' !== $body ){
+			if ( '' !== $body ) {
 				$art['body'] = $body;
 			}
-			if( '' !== $locale ){
+			if ( '' !== $locale ) {
 				$art['locale'] = $locale;
 			}
-			if( '' !== $position ){
+			if ( '' !== $position ) {
 				$art['position'] = $position;
 			}
 
-			if( !empty( $other ) ){
-				foreach( $other as $key => $val ){
-					$art[$key] = $val;
+			if ( ! empty( $other ) ) {
+				foreach ( $other as $key => $val ) {
+					$art[ $key ] = $val;
 				}
 			}
 
-			if( $raw ){
+			if ( $raw ) {
 				return $art;
 			}
 
-			return array( 'article' => $art );
+			return array(
+				'article' => $art,
+			);
 		}
 
 		/**
@@ -505,9 +516,9 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @return [type]             [description]
 		 */
 		public function create_article( $section_id, $article, $locale = 'en-us' ) {
-			if( isset( $article['locale'] ) ){
+			if ( isset( $article['locale'] ) ) {
 				return $this->run( "help_center/sections/$section_id/articles", $article, 'POST' );
-			}else{
+			} else {
 				return $this->run( "help_center/$locale/sections/$section_id/articles", $article, 'POST' );
 			}
 		}
@@ -525,9 +536,9 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @return [type]             [description]
 		 */
 		public function update_article( $article_id, $article, $locale = 'en-us' ) {
-			if( isset( $article['locale'] ) ){
+			if ( isset( $article['locale'] ) ) {
 				return $this->run( "help_center/articles/$article_id", $article, 'PUT' );
-			}else{
+			} else {
 				return $this->run( "help_center/$locale/articles/$article_id", $article, 'PUT' );
 			}
 		}
@@ -571,7 +582,11 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @return [type]                 [description]
 		 */
 		public function associate_attachments_to_article( $article_id, $attachment_ids ) {
-			return $this->run( "help_center/articles/$article_id/bulk_attachments", array( 'attachment_ids' => $attachment_ids ), 'POST' );
+			return $this->run(
+				"help_center/articles/$article_id/bulk_attachments", array(
+					'attachment_ids' => $attachment_ids,
+				), 'POST'
+			);
 		}
 
 		/* ARTICLE COMMENTS. */
@@ -593,7 +608,7 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 			return $this->run( "help_center/$locale/articles/$article_id/comments" );
 		}
 
-		public function get_comments_by_user( $user_id ){
+		public function get_comments_by_user( $user_id ) {
 			return $this->run( "help_center/users/$user_id/comments" );
 		}
 
@@ -614,32 +629,34 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 			return $this->run( "help_center/$locale/articles/$article_id/comments/$comment_id" );
 		}
 
-		public function build_zendesk_comment( $body = '', $created_at = '', $notify_subscribers = '', $other = array(), $raw = false ){
+		public function build_zendesk_comment( $body = '', $created_at = '', $notify_subscribers = '', $other = array(), $raw = false ) {
 			$com = array();
 
-			if( '' !== $body ){
+			if ( '' !== $body ) {
 				$com['body'] = $body;
 			}
 
-			if( '' !== $created_at ){
+			if ( '' !== $created_at ) {
 				$com['created_at'] = $created_at;
 			}
 
-			if( '' !== $notify_subscribers ){
+			if ( '' !== $notify_subscribers ) {
 				$com['notify_subscribers'] = $notify_subscribers;
 			}
 
-			if( !empty( $other ) ){
-				foreach( $other as $key => $val ){
-					$com[$key] = $val;
+			if ( ! empty( $other ) ) {
+				foreach ( $other as $key => $val ) {
+					$com[ $key ] = $val;
 				}
 			}
 
-			if( $raw ){
+			if ( $raw ) {
 				return $com;
 			}
 
-			return array( 'comment' => $com );
+			return array(
+				'comment' => $com,
+			);
 		}
 
 		/**
@@ -665,7 +682,7 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @return [type]             [description]
 		 */
 		public function create_article_comment( $article_id, $comment ) {
-			if( gettype( $comment ) === 'string' ){
+			if ( gettype( $comment ) === 'string' ) {
 				$comment = $this->build_zendesk_comment( $comment );
 			}
 			return $this->run( "help_center/articles/$article_id/comments", $comment, 'POST' );
@@ -685,11 +702,12 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * List article labels
 		 *
 		 * You can set $locale to '' to get generic labels
+		 *
 		 * @param  string $locale [description]
 		 * @return [type]         [description]
 		 */
 		public function list_labels( $locale = 'en-us', $pages = null ) {
-			if( null === $pages ){
+			if ( null === $pages ) {
 				$pages = $this->build_zendesk_pagination();
 			}
 
@@ -705,7 +723,7 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @param  [type] $label_id [description]
 		 * @return [type]           [description]
 		 */
-		public function show_label( $label_id ){
+		public function show_label( $label_id ) {
 			return $this->run( "help_center/articles/labels/$label_id" );
 		}
 
@@ -720,7 +738,7 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @return [type]             [description]
 		 */
 		public function list_article_labels( $article_id, $pages = null ) {
-			if( null === $pages ){
+			if ( null === $pages ) {
 				$pages = $this->build_zendesk_pagination();
 			}
 
@@ -735,7 +753,13 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @return [type]           [description]
 		 */
 		public function create_label( $label_id, $name ) {
-			return $this->run( "help_center/articles/$label_id/labels", array( 'label' => array( 'name' => $name ) ), 'POST' );
+			return $this->run(
+				"help_center/articles/$label_id/labels", array(
+					'label' => array(
+						'name' => $name,
+					),
+				), 'POST'
+			);
 		}
 
 		public function delete_label_from_article( $article_id, $label_id ) {
@@ -755,7 +779,11 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @return [type]              [description]
 		 */
 		public function get_articles_by_label( $label_names ) {
-			return $this->run( 'help_center/articles', array( 'label_names' => $label_names ) );
+			return $this->run(
+				'help_center/articles', array(
+					'label_names' => $label_names,
+				)
+			);
 		}
 
 		// TODO:
@@ -778,10 +806,10 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * snippet (string, read only), the portion that is relevant to the query.
 		 *
 		 * You must specific at least one of:
-		 * 		query
-		 * 		category
-		 * 		section
-		 * 		label_names
+		 *      query
+		 *      category
+		 *      section
+		 *      label_names
 		 *
 		 * Honestly just see the link below.
 		 *
@@ -791,10 +819,16 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @return void
 		 */
 		public function search_articles( $query, $pages = null ) {
-			if( null === $pages ){
+			if ( null === $pages ) {
 				$pages = $this->build_zendesk_pagination();
 			}
-			return $this->run( 'help_center/articles/search', array_merge( array( 'query' => $query ), $pages ) );
+			return $this->run(
+				'help_center/articles/search', array_merge(
+					array(
+						'query' => $query,
+					), $pages
+				)
+			);
 		}
 
 		/* TOPICS. */
@@ -803,11 +837,12 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * List topics.
 		 *
 		 * Lists all topics.
+		 *
 		 * @param  [type] $pages [description]
 		 * @return [type]        [description]
 		 */
 		public function list_topics( $pages = null ) {
-			if( null === $pages ){
+			if ( null === $pages ) {
 				$pages = $this->build_zendesk_pagination();
 			}
 
@@ -837,30 +872,32 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @param  array  $other       [description]
 		 * @return [type]              [description]
 		 */
-		public function build_zendesk_topic( $name = '', $description = '', $position = '', $other = array(), $raw = false ){
+		public function build_zendesk_topic( $name = '', $description = '', $position = '', $other = array(), $raw = false ) {
 			$topic = array();
 
-			if( '' !== $name ){
+			if ( '' !== $name ) {
 				$topic['name'] = $name;
 			}
-			if( '' !== $description ){
+			if ( '' !== $description ) {
 				$topic['description'] = $description;
 			}
-			if( '' !== $position ){
+			if ( '' !== $position ) {
 				$topic['position'] = $position;
 			}
 
-			if( !empty( $other ) ){
-				foreach( $other as $key => $val ){
-					$topic[$key] = $val;
+			if ( ! empty( $other ) ) {
+				foreach ( $other as $key => $val ) {
+					$topic[ $key ] = $val;
 				}
 			}
 
-			if( $raw ){
+			if ( $raw ) {
 				return $topic;
 			}
 
-			return array( 'topic' => $topic );
+			return array(
+				'topic' => $topic,
+			);
 		}
 
 		/**
@@ -876,7 +913,7 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @return [type]        [description]
 		 */
 		public function create_topic( $topic ) {
-			if( gettype( $topic ) === 'string' ){
+			if ( gettype( $topic ) === 'string' ) {
 				$topic = $this->build_zendesk_topic( $topic );
 			}
 
@@ -913,7 +950,7 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @return [type]        [description]
 		 */
 		public function list_posts( $pages = null ) {
-			if( null === $pages ){
+			if ( null === $pages ) {
 				$pages = $this->build_zendesk_pagination();
 			}
 
@@ -921,7 +958,7 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		}
 
 		public function list_posts_by_topic( $topic_id, $pages = null ) {
-			if( null === $pages ){
+			if ( null === $pages ) {
 				$pages = $this->build_zendesk_pagination();
 			}
 
@@ -929,7 +966,7 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		}
 
 		public function list_posts_by_user( $user_id, $pages = null ) {
-			if( null === $pages ){
+			if ( null === $pages ) {
 				$pages = $this->build_zendesk_pagination();
 			}
 
@@ -957,28 +994,30 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @param  array  $other   [description]
 		 * @return [type]          [description]
 		 */
-		public function build_zendesk_post( $topic_id = '', $title = '', $details = '', $other = array(), $raw = false ){
+		public function build_zendesk_post( $topic_id = '', $title = '', $details = '', $other = array(), $raw = false ) {
 			$post = array();
 
-			if( '' !== $title ){
+			if ( '' !== $title ) {
 				$post['title'] = $title;
 			}
 
-			if( '' !== $details ){
+			if ( '' !== $details ) {
 				$post['details'] = $details;
 			}
 
-			if( !empty( $other ) ){
-				foreach( $other as $key => $val ){
-					$post[$key] = $val;
+			if ( ! empty( $other ) ) {
+				foreach ( $other as $key => $val ) {
+					$post[ $key ] = $val;
 				}
 			}
 
-			if( $raw ){
+			if ( $raw ) {
 				return $post;
 			}
 
-			return array( 'post' => $post );
+			return array(
+				'post' => $post,
+			);
 		}
 
 		/**
@@ -990,7 +1029,7 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @return [type]        [description]
 		 */
 		public function create_post( $post, $title = '' ) {
-			if( gettype( $post ) !== 'array' ){
+			if ( gettype( $post ) !== 'array' ) {
 				$post = $this->build_zendesk_post( $post, $title );
 			}
 
@@ -1019,26 +1058,41 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		/* https://developer.zendesk.com/rest_api/docs/help_center/post_comments#post-comments */
 
 		public function list_post_comments( $post_id, $include = array(), $pages = null ) {
-			if( null === $pages ){
+			if ( null === $pages ) {
 				$pages = $this->build_zendesk_pagination();
 			}
-			return $this->run( "community/posts/$post_id/comments", array_merge( array( 'include' => $includes ), $pages ) );
+			return $this->run(
+				"community/posts/$post_id/comments", array_merge(
+					array(
+						'include' => $includes,
+					), $pages
+				)
+			);
 		}
 
-		public function list_post_comments_by_user( $user_id, $include = array(), $pages = null  ) {
-			if( null === $pages ){
+		public function list_post_comments_by_user( $user_id, $include = array(), $pages = null ) {
+			if ( null === $pages ) {
 				$pages = $this->build_zendesk_pagination();
 			}
-			return $this->run( "community/users/$user_id/comments", array_merge( array( 'include' => $includes ), $pages ) );
+			return $this->run(
+				"community/users/$user_id/comments", array_merge(
+					array(
+						'include' => $includes,
+					), $pages
+				)
+			);
 		}
 
 		public function show_post_comment( $post_id, $comment_id, $include = array() ) {
-			return $this->run( "community/posts/$post_id/comments/$comment_id", array( 'include' => $includes ) );
+			return $this->run(
+				"community/posts/$post_id/comments/$comment_id", array(
+					'include' => $includes,
+				)
+			);
 		}
 
 		// Don't need to make a build_zendesk_comment function, since it alreayd exists
 		// and would be exactly identical.
-
 		/**
 		 * Create a comment on a post
 		 *
@@ -1050,7 +1104,7 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @return [type]          [description]
 		 */
 		public function create_post_comment( $post_id, $comment ) {
-			if( gettype( $comment ) === 'string' ){
+			if ( gettype( $comment ) === 'string' ) {
 				$comment = $this->build_zendesk_comment( $comment );
 			}
 
@@ -1078,7 +1132,6 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		/* SUBSCRIPTIONS. */
 
 		// TODO: ADD THE HELP_CENTER PREFIX.
-
 		public function list_article_subscriptions( $article_id, $locale = 'en-us', $include = array() ) {
 			return $this->run( "help_center/$locale/articles/$article_id/subscriptions", $include );
 		}
@@ -1105,11 +1158,11 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		public function create_article_subscription( $article_id, $source_locale = 'en-us', $user_id = '' ) {
 			$args = array(
 				'subscription' => array(
-					'source_locale' => $source_locale
-				)
+					'source_locale' => $source_locale,
+				),
 			);
 
-			if( '' !== $user_id ){
+			if ( '' !== $user_id ) {
 				$args['subscription']['user_id'] = $user_id;
 			}
 
@@ -1144,7 +1197,7 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @return [type]             [description]
 		 */
 		public function list_section_subscriptions( $section_id, $locale = 'en-us', $include = array(), $pages = null ) {
-			if( null === $pages ){
+			if ( null === $pages ) {
 				$pages = $this->build_zendesk_pagination();
 			}
 
@@ -1186,10 +1239,10 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 				'subscription' => array(
 					'source_locale' => $locale,
 					'include_comments' => $include_comments,
-				)
+				),
 			);
 
-			if( '' !== $user_id ){
+			if ( '' !== $user_id ) {
 				$args['subscription']['user_id'] = $user_id;
 			}
 
@@ -1201,7 +1254,7 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		}
 
 		public function list_subscriptions_by_user( $user_id, $include = array(), $page = null ) {
-			if( null === $pages ){
+			if ( null === $pages ) {
 				$pages = $this->build_zendesk_pagination();
 			}
 
@@ -1210,7 +1263,7 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		}
 
 		public function list_subscriptions_by_post( $post_id, $include = array(), $page = null ) {
-			if( null === $pages ){
+			if ( null === $pages ) {
 				$pages = $this->build_zendesk_pagination();
 			}
 
@@ -1225,8 +1278,10 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		public function create_post_subscription( $post_id, $user_id = '' ) {
 			$args = array();
 
-			if( '' !== $user_id ){
-				$args['subscription'] = array( 'user_id' => $user_id );
+			if ( '' !== $user_id ) {
+				$args['subscription'] = array(
+					'user_id' => $user_id,
+				);
 			}
 
 			return $this->run( "community/posts/$post_id/subscriptions", $args, 'POST' );
@@ -1237,7 +1292,7 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		}
 
 		public function list_topic_subscriptions( $topic_id, $include = array(), $pages = null ) {
-			if( null === $pages ){
+			if ( null === $pages ) {
 				$pages = $this->build_zendesk_pagination();
 			}
 
@@ -1252,19 +1307,25 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		public function create_topic_subscription( $topic_id, $include_comments = false, $user_id = '' ) {
 			$args = array(
 				'subscription' => array(
-					'include_comments' => $include_comments
-				)
+					'include_comments' => $include_comments,
+				),
 			);
 
-			if( '' !== $user_id ){
+			if ( '' !== $user_id ) {
 				$args['subscription']['user_id'] = $user_id;
 			}
 
 			return $this->run( "community/topics/$topic_id/subscriptions", $args, 'POST' );
 		}
 
-		public function update_topic_subscription( $topic_id, $include_comments ){
-			return $this->run( "community/topics/$topic_id/subscriptions", array( 'subscription' => array( 'include_comments' => $include_comments ) ), 'PUT' );
+		public function update_topic_subscription( $topic_id, $include_comments ) {
+			return $this->run(
+				"community/topics/$topic_id/subscriptions", array(
+					'subscription' => array(
+						'include_comments' => $include_comments,
+					),
+				), 'PUT'
+			);
 		}
 
 		public function delete_topic_subscription( $topic_id, $subscription_id ) {
@@ -1275,27 +1336,28 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 
 		/**
 		 * To view own votes, use 'me' as $user_id.
+		 *
 		 * @param  [type] $user_id [description]
 		 * @return [type]          [description]
 		 */
 		public function list_votes_by_user( $user_id, $pages = null ) {
-			if( null === $pages ){
+			if ( null === $pages ) {
 				$pages = $this->build_zendesk_pagination();
 			}
 			return $this->run( "help_center/users/$user_id/votes", $pages );
 		}
 
 		public function list_votes_by_article( $article_id, $locale = 'en-us', $include = array(), $pages = null ) {
-			if( null === $pages ){
+			if ( null === $pages ) {
 				$pages = $this->build_zendesk_pagination();
 			}
 
 			$include = array_merge( $pages, $include );
-			return $this->run( "help_center/$locale/articles/$article_id/votes", $include);
+			return $this->run( "help_center/$locale/articles/$article_id/votes", $include );
 		}
 
 		public function list_votes_by_article_comments( $article_id, $comment_id, $locale = 'en-us', $include = array(), $pages = null ) {
-			if( null === $pages ){
+			if ( null === $pages ) {
 				$pages = $this->build_zendesk_pagination();
 			}
 
@@ -1304,7 +1366,7 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		}
 
 		public function list_votes_by_post( $post_id, $include = array(), $pages = null ) {
-			if( null === $pages ){
+			if ( null === $pages ) {
 				$pages = $this->build_zendesk_pagination();
 			}
 
@@ -1313,7 +1375,7 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		}
 
 		public function get_post_comment_votes( $post_id, $comment_id, $include = array(), $pages = null ) {
-			if( null === $pages ){
+			if ( null === $pages ) {
 				$pages = $this->build_zendesk_pagination();
 			}
 
@@ -1328,15 +1390,19 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		public function create_article_vote_up( $article_id, $created_at = '', $user_id = '' ) {
 			$args = array();
 
-			if( '' !== $user_id ){
-				$args['vote'] = array( 'user_id' => $user_id );
+			if ( '' !== $user_id ) {
+				$args['vote'] = array(
+					'user_id' => $user_id,
+				);
 			}
 
-			if( '' !== $created_at ){
-				if( isset( $args['vote'] ) ){
+			if ( '' !== $created_at ) {
+				if ( isset( $args['vote'] ) ) {
 					$args['vote']['created_at'] = $created_at;
-				}else{
-					$args['vote'] = array( 'created_at' => $created_at );
+				} else {
+					$args['vote'] = array(
+						'created_at' => $created_at,
+					);
 				}
 			}
 
@@ -1346,15 +1412,19 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		public function create_article_vote_down( $article_id, $created_at = '', $user_id = '' ) {
 			$args = array();
 
-			if( '' !== $user_id ){
-				$args['vote'] = array( 'user_id' => $user_id );
+			if ( '' !== $user_id ) {
+				$args['vote'] = array(
+					'user_id' => $user_id,
+				);
 			}
 
-			if( '' !== $created_at ){
-				if( isset( $args['vote'] ) ){
+			if ( '' !== $created_at ) {
+				if ( isset( $args['vote'] ) ) {
 					$args['vote']['created_at'] = $created_at;
-				}else{
-					$args['vote'] = array( 'created_at' => $created_at );
+				} else {
+					$args['vote'] = array(
+						'created_at' => $created_at,
+					);
 				}
 			}
 
@@ -1364,15 +1434,19 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		public function create_article_comment_vote_up( $article_id, $comment_id, $created_at = '', $user_id = '' ) {
 			$args = array();
 
-			if( '' !== $user_id ){
-				$args['vote'] = array( 'user_id' => $user_id );
+			if ( '' !== $user_id ) {
+				$args['vote'] = array(
+					'user_id' => $user_id,
+				);
 			}
 
-			if( '' !== $created_at ){
-				if( isset( $args['vote'] ) ){
+			if ( '' !== $created_at ) {
+				if ( isset( $args['vote'] ) ) {
 					$args['vote']['created_at'] = $created_at;
-				}else{
-					$args['vote'] = array( 'created_at' => $created_at );
+				} else {
+					$args['vote'] = array(
+						'created_at' => $created_at,
+					);
 				}
 			}
 
@@ -1382,15 +1456,19 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		public function create_article_comment_vote_down( $article_id, $comment_id, $created_at = '', $user_id = '' ) {
 			$args = array();
 
-			if( '' !== $user_id ){
-				$args['vote'] = array( 'user_id' => $user_id );
+			if ( '' !== $user_id ) {
+				$args['vote'] = array(
+					'user_id' => $user_id,
+				);
 			}
 
-			if( '' !== $created_at ){
-				if( isset( $args['vote'] ) ){
+			if ( '' !== $created_at ) {
+				if ( isset( $args['vote'] ) ) {
 					$args['vote']['created_at'] = $created_at;
-				}else{
-					$args['vote'] = array( 'created_at' => $created_at );
+				} else {
+					$args['vote'] = array(
+						'created_at' => $created_at,
+					);
 				}
 			}
 
@@ -1400,15 +1478,19 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		public function create_post_vote_up( $post_id, $created_at = '', $user_id = '' ) {
 			$args = array();
 
-			if( '' !== $user_id ){
-				$args['vote'] = array( 'user_id' => $user_id );
+			if ( '' !== $user_id ) {
+				$args['vote'] = array(
+					'user_id' => $user_id,
+				);
 			}
 
-			if( '' !== $created_at ){
-				if( isset( $args['vote'] ) ){
+			if ( '' !== $created_at ) {
+				if ( isset( $args['vote'] ) ) {
 					$args['vote']['created_at'] = $created_at;
-				}else{
-					$args['vote'] = array( 'created_at' => $created_at );
+				} else {
+					$args['vote'] = array(
+						'created_at' => $created_at,
+					);
 				}
 			}
 
@@ -1418,15 +1500,19 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		public function create_post_vote_down( $post_id, $created_at = '', $user_id = '' ) {
 			$args = array();
 
-			if( '' !== $user_id ){
-				$args['vote'] = array( 'user_id' => $user_id );
+			if ( '' !== $user_id ) {
+				$args['vote'] = array(
+					'user_id' => $user_id,
+				);
 			}
 
-			if( '' !== $created_at ){
-				if( isset( $args['vote'] ) ){
+			if ( '' !== $created_at ) {
+				if ( isset( $args['vote'] ) ) {
 					$args['vote']['created_at'] = $created_at;
-				}else{
-					$args['vote'] = array( 'created_at' => $created_at );
+				} else {
+					$args['vote'] = array(
+						'created_at' => $created_at,
+					);
 				}
 			}
 
@@ -1436,15 +1522,19 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		public function create_post_comment_vote_up( $post_id, $comment_id, $created_at = '', $user_id = '' ) {
 			$args = array();
 
-			if( '' !== $user_id ){
-				$args['vote'] = array( 'user_id' => $user_id );
+			if ( '' !== $user_id ) {
+				$args['vote'] = array(
+					'user_id' => $user_id,
+				);
 			}
 
-			if( '' !== $created_at ){
-				if( isset( $args['vote'] ) ){
+			if ( '' !== $created_at ) {
+				if ( isset( $args['vote'] ) ) {
 					$args['vote']['created_at'] = $created_at;
-				}else{
-					$args['vote'] = array( 'created_at' => $created_at );
+				} else {
+					$args['vote'] = array(
+						'created_at' => $created_at,
+					);
 				}
 			}
 
@@ -1454,15 +1544,19 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		public function create_post_comment_vote_down( $post_id, $comment_id, $created_at = '', $user_id = '' ) {
 			$args = array();
 
-			if( '' !== $user_id ){
-				$args['vote'] = array( 'user_id' => $user_id );
+			if ( '' !== $user_id ) {
+				$args['vote'] = array(
+					'user_id' => $user_id,
+				);
 			}
 
-			if( '' !== $created_at ){
-				if( isset( $args['vote'] ) ){
+			if ( '' !== $created_at ) {
+				if ( isset( $args['vote'] ) ) {
 					$args['vote']['created_at'] = $created_at;
-				}else{
-					$args['vote'] = array( 'created_at' => $created_at );
+				} else {
+					$args['vote'] = array(
+						'created_at' => $created_at,
+					);
 				}
 			}
 
@@ -1498,23 +1592,23 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 
 			$args = array();
 
-			if( '' !== $viewable_by ){
+			if ( '' !== $viewable_by ) {
 				$args['viewable_by'] = $viewable_by;
 			}
 
-			if( '' !== $manageable_by ){
+			if ( '' !== $manageable_by ) {
 				$args['manageable_by'] = $manageable_by;
 			}
 
-			if( !empty( $restricted_to_group_ids ) ){
+			if ( ! empty( $restricted_to_group_ids ) ) {
 				$args['restricted_to_group_ids'] = $restricted_to_group_ids;
 			}
 
-			if( !empty( $restricted_to_org_ids ) ){
+			if ( ! empty( $restricted_to_org_ids ) ) {
 				$args['restricted_to_org_ids'] = $restricted_to_org_ids;
 			}
 
-			if( !empty( $required_tags ) ){
+			if ( ! empty( $required_tags ) ) {
 				$args['required_tags'] = $required_tags;
 			}
 
@@ -1532,27 +1626,27 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		 * @param  array  $requred_tags            A user must have ALL listed tags to have access.
 		 * @return [type]                          [description]
 		 */
-		public function update_topic_access_policy( $topic_id, $viewable_by = '', $manageable_by = '', $restricted_to_group_ids = array(), $restricted_to_org_ids = array(), $required_tags = array()  ) {
+		public function update_topic_access_policy( $topic_id, $viewable_by = '', $manageable_by = '', $restricted_to_group_ids = array(), $restricted_to_org_ids = array(), $required_tags = array() ) {
 
 			$args = array();
 
-			if( '' !== $viewable_by ){
+			if ( '' !== $viewable_by ) {
 				$args['viewable_by'] = $viewable_by;
 			}
 
-			if( '' !== $manageable_by ){
+			if ( '' !== $manageable_by ) {
 				$args['manageable_by'] = $manageable_by;
 			}
 
-			if( !empty( $restricted_to_group_ids ) ){
+			if ( ! empty( $restricted_to_group_ids ) ) {
 				$args['restricted_to_group_ids'] = $restricted_to_group_ids;
 			}
 
-			if( !empty( $restricted_to_org_ids ) ){
+			if ( ! empty( $restricted_to_org_ids ) ) {
 				$args['restricted_to_org_ids'] = $restricted_to_org_ids;
 			}
 
-			if( !empty( $required_tags ) ){
+			if ( ! empty( $required_tags ) ) {
 				$args['required_tags'] = $required_tags;
 			}
 
@@ -1562,7 +1656,7 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		/* USER SEGMENTS: https://developer.zendesk.com/rest_api/docs/help_center/user_segments	*/
 
 		public function list_user_segments( $pages = null ) {
-			if( null !== $pages ){
+			if ( null !== $pages ) {
 				$pages = $this->build_zendesk_pagination();
 			}
 
@@ -1570,7 +1664,7 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		}
 
 		public function list_user_segments_applicable( $pages = null ) {
-			if( null !== $pages ){
+			if ( null !== $pages ) {
 				$pages = $this->build_zendesk_pagination();
 			}
 
@@ -1582,7 +1676,7 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		}
 
 		public function list_sections_with_user_segment( $user_segment_id, $pages = null ) {
-			if( null !== $pages ){
+			if ( null !== $pages ) {
 				$pages = $this->build_zendesk_pagination();
 			}
 
@@ -1590,7 +1684,7 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		}
 
 		public function list_topics_with_user_segment( $user_segment_id, $pages = null ) {
-			if( null !== $pages ){
+			if ( null !== $pages ) {
 				$pages = $this->build_zendesk_pagination();
 			}
 
@@ -1611,13 +1705,17 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 				'user_type' => $user_type,
 			);
 
-			if( !empty( $other ) ){
-				foreach( $other as $key => $val ){
-					$args[$key] = $val;
+			if ( ! empty( $other ) ) {
+				foreach ( $other as $key => $val ) {
+					$args[ $key ] = $val;
 				}
 			}
 
-			return $this->run( "help_center/user_segments", array( 'user_segment' => $args ), 'POST' );
+			return $this->run(
+				'help_center/user_segments', array(
+					'user_segment' => $args,
+				), 'POST'
+			);
 		}
 
 		/**
@@ -1632,9 +1730,9 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 		public function update_user_segment( $user_segment_id, $other = array() ) {
 			$args = array();
 
-			if( !empty( $other ) ){
-				foreach( $other as $key => $val ){
-					$args[$key] = $val;
+			if ( ! empty( $other ) ) {
+				foreach ( $other as $key => $val ) {
+					$args[ $key ] = $val;
 				}
 			}
 
