@@ -52,10 +52,12 @@ if ( ! class_exists( 'WpLibrariesBase' ) ) {
 			$code = wp_remote_retrieve_response_code( $response );
 			$body = json_decode( wp_remote_retrieve_body( $response ) );
 
+			// Clear last request.
+			$this->clear();
+
 			if ( ! $this->is_status_ok( $code ) && ! $this->is_debug ) {
 				return new WP_Error( 'response-error', sprintf( __( 'Status: &d', 'wp-postmark-api' ), $code ), $body );
 			}
-			$this->clear();
 			return $body;
 		}
 		/**

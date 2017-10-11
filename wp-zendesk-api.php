@@ -453,7 +453,7 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 				$args['sort_order'] = $sort_order;
 			}
 
-			return $this->run( 'tickets', $args );
+			return $this->run( 'tickets/recent', $args );
 		}
 
 		/**
