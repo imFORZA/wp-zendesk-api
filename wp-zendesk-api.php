@@ -1378,7 +1378,13 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		// 				)
 		// 			)
 		public function update_users( $user, $ids = null ){
-			// Ugh... later.
+			if ( null !== $ids && gettype( $ids ) === 'string' ) {
+				return $this->run( "users/update_many.json?ids=$ids", $user, 'PUT', false );
+			} else if ( null !== $ids && gettype( $ids ) === 'array' ) {
+				return $this->run( 'users/update_many.json?ids=' . implode( ',', $ids ), $user, 'PUT', false );
+			} else {
+				return $this->run( 'users/update_many', $user, 'PUT' );;
+			}
 		}
 
 		public function create_or_update_user( $user ){
