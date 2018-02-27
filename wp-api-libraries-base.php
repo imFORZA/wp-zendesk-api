@@ -6,9 +6,9 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; }
 /* Check if class exists. */
-if ( ! class_exists( 'WpLibrariesBase' ) ) {
+if ( ! class_exists( 'ZendeskAPIBase' ) ) {
 	/* Define abstract class. */
-	abstract class WpLibrariesBase {
+	abstract class ZendeskAPIBase {
 
 		protected $args;
 		protected $base_uri;
@@ -45,7 +45,6 @@ if ( ! class_exists( 'WpLibrariesBase' ) ) {
 			return $this;
 		}
 		protected function fetch() {
-
 			$response = wp_remote_request( $this->base_uri . $this->route, $this->args );
 
 			// Retrieve status code and body.

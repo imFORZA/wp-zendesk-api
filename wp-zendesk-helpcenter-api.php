@@ -15,7 +15,7 @@ if ( ! class_exists( 'WPZendeskHelpCenterAPI' ) ) {
 	/**
 	 * Seny API Class.
 	 */
-	class WPZendeskHelpCenterAPI extends WpLibrariesBase {
+	class WPZendeskHelpCenterAPI extends ZendeskAPIBase {
 
 		private $username;
 

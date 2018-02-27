@@ -19,7 +19,7 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 	 *
 	 * @link https://github.com/wp-api-libraries/wp-api-base
 	 */
-	class WpZendeskAPI extends WpLibrariesBase {
+	class WpZendeskAPI extends ZendeskAPIBase {
 
 		/**
 		 * The username through which to make all calls.
@@ -1354,6 +1354,15 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 			return $this->run( 'users', $user, 'POST' );
 		}
 
+		// Also recommended to use the build zendesk user function.
+		public function update_user( $user_id, $user ){
+			return $this->run( 'users/'.$user_id, $user, 'PUT' );
+		}
+
+		public function create_or_update_user( $user ){
+			return $this->run( 'users/create_or_update', $user, 'POST' );
+		}
+
 		public function search_users( $query, $external_id = false ) {
 			if ( $external_id !== false ) {
 				return $this->run(
@@ -1376,7 +1385,7 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		public function bulk_delete_users( $user_ids ) {
 			if ( gettype( $user_ids ) === 'string' ) {
 				return $this->run( "users/destroy_many.json?ids=$user_ids", array(), 'DELETE', false );
-			} elseif ( gettype( $user_ids ) === 'array' ) {
+			} else if ( gettype( $user_ids ) === 'array' ) {
 				return $this->run( 'users/destroy_many.json?ids=' . implode( ',', $user_ids ), array(), 'DELETE', false );
 			} else {
 				return 'Error: invalid data type.';
@@ -1556,6 +1565,10 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		/* Ticket fields */
 
 		/* User fields */
+
+		public function list_user_fields(){
+			return $this->run( 'user_fields' );
+		}
 
 		/* Apps */
 
