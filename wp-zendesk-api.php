@@ -1359,8 +1359,35 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 			return $this->run( 'users/'.$user_id, $user, 'PUT' );
 		}
 
+		// Use cases:
+		// 		Making the same change to a bunch of users:
+		// 			$ids = array( id, id, id )
+		// 			$user = array( 'user' => 'org_id' => 2 ),
+		// 		Making different changes to different usres:
+		// 			$user = array(
+		// 				'users' => array(
+		// 					array(
+		// 						'id' => 20,
+		// 						'name' => 'TJ'
+		// 					),
+		// 					array(
+		// 						'id' => 30,
+		// 						'organization_id' => 2,
+		// 						'verified' => true
+		// 					)
+		// 				)
+		// 			)
+		public function update_users( $user, $ids = null ){
+			// Ugh... later.
+		}
+
 		public function create_or_update_user( $user ){
 			return $this->run( 'users/create_or_update', $user, 'POST' );
+		}
+
+		// Each user can be identified via email or external ID.
+		public function create_or_update_users( $users ){
+			return $this->run( 'users/create_or_update_many', $users, 'POST' );
 		}
 
 		public function search_users( $query, $external_id = false ) {
