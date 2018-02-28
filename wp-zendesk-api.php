@@ -94,7 +94,7 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		public function __construct( $domain, $username, $api_key, $debug = false ) {
 			$this->base_uri = "https://$domain.zendesk.com/api/v2/";
 			$this->username = $username;
-			$this->api_key = $api_key;
+			$this->api_key  = $api_key;
 			$this->is_debug = $debug;
 		}
 
@@ -127,7 +127,7 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		 */
 		public function set_auth( $username, $api_key ) {
 			$this->username = $username;
-			$this->api_key = $api_key;
+			$this->api_key  = $api_key;
 		}
 
 		/**
@@ -145,8 +145,8 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		 */
 		public function set_temporary_username( $username, $fast_reset = true ) {
 			$this->backup_username = $this->username;
-			$this->username = $username;
-			$this->fast_reset = $fast_reset;
+			$this->username        = $username;
+			$this->fast_reset      = $fast_reset;
 		}
 
 		/**
@@ -154,10 +154,10 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		 *
 		 * @param boolean $fast_reset (Default: true) Whether to reset after the next
 		 *                            immediate fetch() call.
-		 * @return WpZendeskAPIS      Self.
+		 * @return WpZendeskAPI       Self.
 		 */
 		public function set_temporary_noauth( $fast_reset = true ) {
-			$this->no_auth = true;
+			$this->no_auth    = true;
 			$this->fast_reset = $fast_reset;
 
 			return $this;
@@ -172,7 +172,7 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		 */
 		public function reset_username() {
 			if ( '' !== $this->backup_username ) {
-				$this->username = $this->backup_username;
+				$this->username        = $this->backup_username;
 				$this->backup_username = '';
 			}
 
@@ -188,9 +188,9 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 			$result = parent::fetch();
 
 			if ( '' !== $this->backup_username && $this->fast_reset ) {
-				$this->username = $this->backup_username;
+				$this->username        = $this->backup_username;
 				$this->backup_username = '';
-				$this->no_auth = false;
+				$this->no_auth         = false;
 			}
 
 			return $result;
@@ -237,14 +237,14 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 				//
 				// Right here, serialize the route and args, make a hash of each. Store to a
 				// custom table, search for the hash, along with a timeout (say, 60 seconds?).
-				$key = 'hostops_zendeskapi_' . $route . ($add_data_type ? '.json' : '') . serialize( $args );
+				$key = 'hostops_zendeskapi_' . $route . ( $add_data_type ? '.json' : '' ) . serialize( $args );
 
 				$result = get_transient( $key );
 
 				if ( false === $result ) {
-					$result = $this->build_request( $route . ($add_data_type ? '.json' : ''), $args, $method )->fetch();
+					$result = $this->build_request( $route . ( $add_data_type ? '.json' : '' ), $args, $method )->fetch();
 
-					$expiration = 60; // Seconds.
+					$expiration = 60; // 30 minutes.
 
 					// Possible TODO: set longer expiration, depending on the route.
 					//
@@ -272,7 +272,7 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 				return $result;
 			}
 
-			return $this->build_request( $route . ($add_data_type ? '.json' : ''), $args, $method )->fetch();
+			return $this->build_request( $route . ( $add_data_type ? '.json' : '' ), $args, $method )->fetch();
 		}
 
 		/**
@@ -310,6 +310,20 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 			$this->args = array();
 		}
 
+		private function parse_args( $args, $merge = array() ) {
+			$results = array();
+
+			foreach ( $args as $key => $val ) {
+				if ( $val !== null ) {
+					$results[ $key ] = $val;
+				} elseif ( is_array( $val ) && ! empty( $val ) ) {
+					$results[ $key ] = $val;
+				}
+			}
+
+			return array_merge( $merge, $results );
+		}
+
 		/**
 		 * Function for building zendesk pagination.
 		 *
@@ -322,11 +336,11 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		public function build_zendesk_pagination( $per_page = 100, $page = 1, $sort_by = '', $sort_order = 'desc' ) {
 			$args = array(
 				'per_page' => $per_page,
-				'page' => $page,
+				'page'     => $page,
 			);
 
 			if ( '' !== $sort_by ) {
-				$args['sort_by'] = $sort_by;
+				$args['sort_by']    = $sort_by;
 				$args['sort_order'] = $sort_order;
 			}
 
@@ -334,7 +348,63 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		}
 
 		/**
+		 * Function for setting pagination prior to a call (should be a GET only!).
+		 *
+		 * Example usage:
+		 *
+		 *    $hapi = new WpZendeskAPI( ... );
+		 *    $results = $hapi->p( 2, 30, array( 'sort_by' => 'updated_at') )->get_tasks();
+		 *
+		 *    // Alternatively
+		 *    $hapi->set_pagination( 2, 30 );
+		 *    $results = $hapi->get_tasks();
+		 *
+		 * If 'sort_by' is set and 'sort_order' is not set, it will be automatically set to desc.
+		 *
+		 * p() is a wrapper function for set_pagination.
+		 *
+		 * TODO: move updated_since to here (since it appears in all other cases as well).
+		 *
+		 * @param integer $page     (Default: 1) Page offset to get results from
+		 *                          (multiplied by $per_page is the final page).
+		 * @param integer $per_page (Default: 100) Number of results to display per page.
+		 * @param string  $args     (Default: null) Only retrieve results that have
+		 *                          been updated after this date.
+		 * @return WpZendeskAPI     $this.
+		 */
+		public function set_pagination( $per_page = 100, $page = 1, $args = array() ) {
+			$this->args['body'] = $this->parse_args(
+				array(
+					'per_page' => $per_page,
+					'page'     => $page,
+				), $args
+			);
+
+			if ( isset( $this->args['body']['sort_by'] ) && ! isset( $this->args['body']['sort_order'] ) ) {
+				$this->args['body']['sort_order'] = 'desc';
+			}
+
+			pp( $this->args['body'] );
+
+			return $this;
+		}
+
+		/**
+		 * Wrapper function for set_pagination().
+		 *
+		 * @param integer $page     (Default: 1) Page offset to get results from (multiplied
+		 *                          by $per_page is the final page).
+		 * @param integer $per_page (Default: 100) Number of results to display per page.
+		 * @return HarvestAPI       $this.           [description]
+		 */
+		public function p( $per_page = 100, $page = 1, $args = array() ) {
+			return $this->set_pagination( $per_page, $page, $args );
+		}
+
+		/**
 		 * Query the Zendesk search route.
+		 *
+		 * Can be paginated.
 		 *
 		 * @link https://developer.zendesk.com/rest_api/docs/core/search
 		 *
@@ -347,18 +417,8 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		 *                                either 'desc' or 'asc'.
 		 * @return object                 A stdClass of the body from the response.
 		 */
-		public function search( $search_string, $per_page = 100, $page = 1, $sort_by = '', $sort_order = 'desc' ) {
-			$args = array(
-				'query'      => $search_string,
-				'per_page'   => $per_page,
-				'page'       => $page,
-				'sort_order' => $sort_order,
-			);
-
-			if ( '' !== $sort_by ) {
-				$args['sort_by'] = $sort_by;
-			}
-			return $this->run( 'search', $args );
+		public function search( $search_string ) {
+			return $this->run( 'search', array( 'query' => $search_string ) );
 		}
 
 		/* Useful search functions */
@@ -436,28 +496,22 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		 *
 		 * You can also sideload related records with the tickets. See Side-Loading.
 		 *
+		 * Can be paginated.
+		 *
 		 * @param  integer $per_page   (Default: 100) Number of results to display per page. Max 100.
 		 * @param  integer $page       (Default: 1) What offset to start at.
 		 * @param  string  $sort_by    (Default: '') What to sort by.
 		 * @param  string  $sort_order (Default: 'desc') Order of results to display.
 		 * @return object              List of tickets.
 		 */
-		public function list_tickets( $per_page = 100, $page = 1, $sort_by = '', $sort_order = 'desc' ) {
-			$args = array(
-				'per_page' => $per_page,
-				'page' => $page,
-			);
-
-			if ( '' !== $sort_by ) {
-				$args['sort_by'] = $sort_by;
-				$args['sort_order'] = $sort_order;
-			}
-
-			return $this->run( 'tickets/recent', $args );
+		public function list_tickets() {
+			return $this->run( 'tickets' );
 		}
 
 		/**
 		 * Extention of list_tickets, except show tickets by user ID.
+		 *
+		 * Can be paginated.
 		 *
 		 * @param  string $user_id The user ID. Can also be int.
 		 * @return object          A list of tickets requested by a specific user ID.
@@ -488,13 +542,12 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		 *
 		 * TODO: rename to list_tickets.
 		 *
+		 * Can be paginated.
+		 *
 		 * @param  mixed $ids Either an array of ticket IDs, or a comma separated list.
 		 * @return object     The multiple tickets requested.
 		 */
-		public function show_multiple_tickets( $ids, $pages = null ) {
-			if ( null === $pages ) {
-				$pages = $this->build_zendesk_pagination();
-			}
+		public function show_multiple_tickets( $ids ) {
 			if ( is_array( $ids ) ) {
 				$ids = implode( $ids, ',' );
 			}
@@ -511,39 +564,34 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		 * @param  [type] $user_id [description]
 		 * @return [type]          [description]
 		 */
-		public function get_requests_by_user( $user_id, $pages = null ) {
-			if ( null === $pages ) {
-				$pages = $this->build_zendesk_pagination();
-			}
+		public function get_requests_by_user( $user_id ) {
 			return $this->run( "users/$user_id/tickets/requested" );
 		}
 
 		/**
 		 * Extension of show_tickets, shows tickets that are cc'd to a user.
 		 *
+		 * Can be paginated.
+		 *
 		 * @param  [type] $user_id [description]
 		 * @return [type]          [description]
 		 */
 		public function get_ccd_by_user( $user_id, $pages = null ) {
-			if ( null === $pages ) {
-				$pages = $this->build_zendesk_pagination();
-			}
 			return $this->run( "users/$user_id/tickets/ccd" );
 		}
 
 		/**
 		 * Extension of show_tickets, shows tickets assigned to a user.
+		 *
+		 * Can be paginated.
+		 *
 		 * @param  [type]  $user_id  [description]
 		 * @param  integer $per_page [description]
 		 * @param  integer $page     [description]
 		 * @return [type]            [description]
 		 */
-		public function get_assigned_by_user( $user_id, $per_page = 100, $page = 1 ) {
-			$args = array(
-				'per_page' => $per_page,
-				'page' => $page,
-			);
-			return $this->run( "users/$user_id/tickets/assigned", $args );
+		public function get_assigned_by_user( $user_id ) {
+			return $this->run( "users/$user_id/tickets/assigned" );
 		}
 
 		/**
@@ -563,23 +611,23 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		public function build_zendesk_ticket( $subject = '', $description = '', $comment = '', $requester_id = '', $tags = '', $other = array(), $raw = false ) {
 			$ticket = array();
 
-			if ( '' !== $subject) {
+			if ( '' !== $subject ) {
 				$ticket['subject'] = $subject;
 			}
 
-			if ( '' !== $description) {
+			if ( '' !== $description ) {
 				$ticket['description'] = $description;
 			}
 
-			if ( '' !== $comment) {
+			if ( '' !== $comment ) {
 				$ticket['comment'] = $comment;
 			}
 
-			if ( '' !== $requester_id) {
+			if ( '' !== $requester_id ) {
 				$ticket['requester_id'] = $requester_id;
 			}
 
-			if ( '' !== $tags) {
+			if ( '' !== $tags ) {
 				if ( gettype( $tags ) == 'array' ) {
 					$ticket['tags'] = implode( ',', $tags );
 				} else {
@@ -734,13 +782,12 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		/**
 		 * List collaborators for a ticket.
 		 *
+		 * Can be paginated.
+		 *
 		 * @param  string $ticket_id The ID of the ticket (can also be numeric).
 		 * @return array             A list of collaborators on a ticket.
 		 */
-		public function get_collaborators_ticket( $ticket_id, $pages = null ) {
-			if ( null === $pages ) {
-				$pages = $this->build_zendesk_pagination();
-			}
+		public function get_collaborators_ticket( $ticket_id ) {
 			return $this->run( "tickets/$ticket_id/collaborators" );
 		}
 
@@ -750,10 +797,7 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		 * @param  [type] $ticket_id [description]
 		 * @return array             A list of incidents from a ticket.
 		 */
-		public function list_ticket_incidents( $ticket_id, $pages = null ) {
-			if ( null === $pages ) {
-				$pages = $this->build_zendesk_pagination();
-			}
+		public function list_ticket_incidents( $ticket_id ) {
 			return $this->run( "tickets/$ticket_id/incidents" );
 		}
 
@@ -813,91 +857,68 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		/**
 		 * List general requests.
 		 *
-		 * @param  integer $per_page   [description]
-		 * @param  integer $page       [description]
-		 * @param  string  $sort_by    [description]
-		 * @param  string  $sort_order [description]
+		 * Can be paginated
+		 *
 		 * @return [type]              [description]
 		 */
-		public function list_requests( $per_page = 100, $page = 1, $sort_by = '', $sort_order = 'desc' ) {
-			$args = array(
-				'per_page' => $per_page,
-				'page' => $page,
-			);
-
-			if ( '' !== $sort_by ) {
-				$args['sort_by'] = $sort_by;
-				$args['sort_order'] = $sort_order;
-			}
-			return $this->run( 'requests', $args );
+		public function list_requests() {
+			return $this->run( 'requests' );
 		}
 
-		public function list_open_requests( $per_page = 100, $page = 1, $sort_by = '', $sort_order = 'desc' ) {
-			$args = array(
-				'per_page' => $per_page,
-				'page' => $page,
-			);
-
-			if ( '' !== $sort_by ) {
-				$args['sort_by'] = $sort_by;
-				$args['sort_order'] = $sort_order;
-			}
+		/**
+		 * Can be paginated.
+		 *
+		 * @return [type] [description]
+		 */
+		public function list_open_requests() {
 			return $this->run( 'requests/open', $args );
 		}
 
-		public function list_hold_requests( $per_page = 100, $page = 1, $sort_by = '', $sort_order = 'desc' ) {
-			$args = array(
-				'per_page' => $per_page,
-				'page' => $page,
-			);
-
-			if ( '' !== $sort_by ) {
-				$args['sort_by'] = $sort_by;
-				$args['sort_order'] = $sort_order;
-			}
-
+		/**
+		 * Can be paginated.
+		 *
+		 * @return [type] [description]
+		 */
+		public function list_hold_requests() {
 			return $this->run( 'requests/hold', $args );
 		}
 
 		/**
 		 * Format for statuses: comma separated list (string) of statuses to browse through.
 		 *
+		 * Can be paginated.
+		 *
 		 * @param  [type] $statuses
 		 * @param  array  $zendesk_pagination Zendesk pagination tool.
 		 * @return [type]              [description]
 		 */
-		public function list_requests_by_status( $statuses, $zendesk_pagination = null ) {
-			if ( null === $zendesk_pagination ) {
-				$zendesk_pagination = $this->build_zendesk_pagination();
-			}
-
-			$args = array_merge(
-				$zendesk_pagination, array(
-					'status' => $statuses,
-				)
-			);
-
-			return $this->run( 'requests', $args );
+		public function list_requests_by_status( $statuses ) {
+			return $this->run( 'requests', array( 'status' => $statuses ) );
 		}
 
-		public function list_requests_by_user( $user_id, $zendesk_pagination = null ) {
-			if ( null === $zendesk_pagination ) {
-				$zendesk_pagination = $this->build_zendesk_pagination();
-			}
-
-			return $this->run( "users/$user_id/requests", $zendesk_pagination );
+		/**
+		 * Can be paginated.
+		 *
+		 * @param  [type] $user_id [description]
+		 * @return [type]          [description]
+		 */
+		public function list_requests_by_user( $user_id ) {
+			return $this->run( "users/$user_id/requests" );
 		}
 
-		public function list_requests_by_organization( $zendesk_pagination = null ) {
-			if ( null === $zendesk_pagination ) {
-				$zendesk_pagination = $this->build_zendesk_pagination();
-			}
-
-			return $this->run( "organizations/$org_id/requests", $zendesk_pagination );
+		/**
+		 * Can be paginated.
+		 *
+		 * @return [type] [description]
+		 */
+		public function list_requests_by_organization() {
+			return $this->run( "organizations/$org_id/requests" );
 		}
 
 		/**
 		 * Search requests.
+		 *
+		 * Can be paginated.
 		 *
 		 * GET /api/v2/requests/search.json?query=camera
 		 * GET /api/v2/requests/search.json?query=camera&organization_id=1
@@ -908,18 +929,8 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		 * @param  [type] $zendesk_pagination
 		 * @return [type]                     [description]
 		 */
-		public function search_requests( $query, $zendesk_pagination = null ) {
-			if ( null === $zendesk_pagination ) {
-				$zendesk_pagination = $this->build_zendesk_pagination();
-			}
-
-			$args = array_merge(
-				$zendesk_pagination, array(
-					'query' => $query,
-				)
-			);
-
-			return $this->run( 'requests/search', $args );
+		public function search_requests( $query ) {
+			return $this->run( 'requests/search', array( 'query' => $query ) );
 		}
 
 		/**
@@ -1006,15 +1017,13 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		 *
 		 * Please test.
 		 *
+		 * Can be paginated.
+		 *
 		 * @link https://developer.zendesk.com/rest_api/docs/core/requests#listing-comments
 		 * @param  [type] $request_id [description]
 		 * @return [type]             [description]
 		 */
-		public function list_comments_request( $request_id, $zendesk_pagination = null ) {
-			if ( null === $zendesk_pagination ) {
-				$zendesk_pagination = $this->build_zendesk_pagination();
-			}
-
+		public function list_comments_request( $request_id ) {
 			return $this->run( "requests/$request_id/comments", $zendesk_pagination );
 		}
 
@@ -1082,6 +1091,8 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		/**
 		 * List satisfcation ratings
 		 *
+		 * Can be paginated.
+		 *
 		 * @link https://developer.zendesk.com/rest_api/docs/core/satisfaction_ratings#list-satisfaction-ratings
 		 * @param  string $score              received, received_with_comment, received_without_comment,
 		 *                                    good, good_with_comment, good_without_comment,
@@ -1090,27 +1101,16 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		 *                                    a Unix epoch time
 		 * @param  string $end_time           Time of the most recent satisfaction rating,
 		 *                                    as a Unix epoch time
-		 * @param  [type] $zendesk_pagination [description]
 		 * @return [type]                     [description]
 		 */
-		public function list_satisfaction_ratings( $score = '', $start_time = '', $end_time = '', $zendesk_pagination = null ) {
-			if ( null === $zendesk_pagination ) {
-				$zendesk_pagination = $this->build_zendesk_pagination();
-			}
-
-			$args = $zendesk_pagination;
-
-			if ( '' !== $score ) {
-				$args['score'] = $score;
-			}
-
-			if ( '' !== $start_time ) {
-				$args['start_time'] = $start_time;
-			}
-
-			if ( '' !== $end_time ) {
-				$args['end_time'] = $end_time;
-			}
+		public function list_satisfaction_ratings( $score = null, $start_time = null, $end_time = null ) {
+			$args = $this->parse_args(
+				array(
+					'score'      => $score,
+					'start_time' => $start_time,
+					'end_time'   => $end_time,
+				)
+			);
 
 			return $this->run( 'satisfaction_ratings', $args );
 		}
@@ -1146,7 +1146,7 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		 */
 		public function create_satisfaction_rating( $ticket_id, $score, $comment = '', $sort_order = 'asc' ) {
 			$args = array(
-				'score' => $score,
+				'score'      => $score,
 				'sort_order' => $sort_order,
 			);
 
@@ -1222,7 +1222,7 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 
 			$ticket['comment'] = array(
 				'public' => $public,
-				'body' => $text,
+				'body'   => $text,
 			);
 
 			return $this->run( 'tickets/' . $ticket_id, $ticket, 'PUT' );
@@ -1234,6 +1234,13 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 			return $this->run( 'requests/' . $request_id, $request, 'PUT' );
 		}
 
+		/**
+		 * I think it can be paginated?
+		 *
+		 * @param  [type] $ticket_id  [description]
+		 * @param  string $sort_order [description]
+		 * @return [type]             [description]
+		 */
 		public function list_comments( $ticket_id, $sort_order = 'asc' ) {
 			return $this->run(
 				"tickets/$ticket_id/comments", array(
@@ -1266,14 +1273,16 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 
 		/* Users */
 
-		public function list_users( $id = '', $is_group = true, $page = '' ) {
+		/**
+		 * Can be paginated.
+		 *
+		 * @param  string  $id       [description]
+		 * @param  boolean $is_group [description]
+		 * @param  string  $page     [description]
+		 * @return [type]            [description]
+		 */
+		public function list_users( $id = '', $is_group = true ) {
 			$options = array();
-
-			if ( $page != '' ) {
-				$options = array(
-					'page' => $page,
-				);
-			}
 
 			if ( $id != '' ) {
 				if ( $is_group ) {
@@ -1354,48 +1363,70 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 			return $this->run( 'users', $user, 'POST' );
 		}
 
+		// Expects:
+		// users:[
+		// {
+		// name: tj
+		// email: tj@tj.tj
+		// },
+		// {
+		// name: jk
+		// email: jkrowling@harrypotter.com
+		// },
+		// ]
+		public function create_users( $users ) {
+			return $this->run( 'users/create_many', $users, 'POST' );
+		}
+
 		// Also recommended to use the build zendesk user function.
-		public function update_user( $user_id, $user ){
-			return $this->run( 'users/'.$user_id, $user, 'PUT' );
+		public function update_user( $user_id, $user ) {
+			return $this->run( 'users/' . $user_id, $user, 'PUT' );
 		}
 
 		// Use cases:
-		// 		Making the same change to a bunch of users:
-		// 			$ids = array( id, id, id )
-		// 			$user = array( 'user' => 'org_id' => 2 ),
-		// 		Making different changes to different usres:
-		// 			$user = array(
-		// 				'users' => array(
-		// 					array(
-		// 						'id' => 20,
-		// 						'name' => 'TJ'
-		// 					),
-		// 					array(
-		// 						'id' => 30,
-		// 						'organization_id' => 2,
-		// 						'verified' => true
-		// 					)
-		// 				)
-		// 			)
-		public function update_users( $user, $ids = null ){
+		// Making the same change to a bunch of users:
+		// $ids = array( id, id, id )
+		// $user = array( 'user' => 'org_id' => 2 ),
+		// Making different changes to different usres:
+		// $user = array(
+		// 'users' => array(
+		// array(
+		// 'id' => 20,
+		// 'name' => 'TJ'
+		// ),
+		// array(
+		// 'id' => 30,
+		// 'organization_id' => 2,
+		// 'verified' => true
+		// )
+		// )
+		// )
+		public function update_users( $user, $ids = null ) {
 			if ( null !== $ids && gettype( $ids ) === 'string' ) {
 				return $this->run( "users/update_many.json?ids=$ids", $user, 'PUT', false );
-			} else if ( null !== $ids && gettype( $ids ) === 'array' ) {
+			} elseif ( null !== $ids && gettype( $ids ) === 'array' ) {
 				return $this->run( 'users/update_many.json?ids=' . implode( ',', $ids ), $user, 'PUT', false );
 			} else {
-				return $this->run( 'users/update_many', $user, 'PUT' );;
+				return $this->run( 'users/update_many', $user, 'PUT' );
 			}
 		}
 
-		public function create_or_update_user( $user ){
+		public function create_or_update_user( $user ) {
 			return $this->run( 'users/create_or_update', $user, 'POST' );
 		}
 
 		// Each user can be identified via email or external ID.
-		public function create_or_update_users( $users ){
+		public function create_or_update_users( $users ) {
 			return $this->run( 'users/create_or_update_many', $users, 'POST' );
 		}
 
+		/**
+		 * Can be paginated.
+		 *
+		 * @param  [type]  $query       [description]
+		 * @param  boolean $external_id [description]
+		 * @return [type]               [description]
+		 */
 		public function search_users( $query, $external_id = false ) {
 			if ( $external_id !== false ) {
 				return $this->run(
@@ -1418,7 +1449,7 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		public function bulk_delete_users( $user_ids ) {
 			if ( gettype( $user_ids ) === 'string' ) {
 				return $this->run( "users/destroy_many.json?ids=$user_ids", array(), 'DELETE', false );
-			} else if ( gettype( $user_ids ) === 'array' ) {
+			} elseif ( gettype( $user_ids ) === 'array' ) {
 				return $this->run( 'users/destroy_many.json?ids=' . implode( ',', $user_ids ), array(), 'DELETE', false );
 			} else {
 				return 'Error: invalid data type.';
@@ -1439,8 +1470,42 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 
 		/* User identities */
 
+		/**
+		 * Can be paginated.
+		 *
+		 * @param  [type] $user_id [description]
+		 * @return [type]          [description]
+		 */
 		public function list_identities( $user_id ) {
 			return $this->run( "users/$user_id/identities" );
+		}
+
+		public function show_identity( $user_id, $identity_id ) {
+			return $this->run( "users/$user_id/identities/$identity_id" );
+		}
+
+		public function create_identity( $user_id, $identity ) {
+			return $this->run( "users/$user_id/identities/$identity_id", $identity, 'POST' );
+		}
+
+		public function update_identity( $user_id, $identity_id, $identity ) {
+			return $this->run( "users/$user_id/identities/$identity_id", $identity, 'PUT' );
+		}
+
+		public function make_identity_primary( $user_id, $identity_id ) {
+			return $this->run( "users/$user_id/identities/$identity_id/make_primary", array(), 'PUT' );
+		}
+
+		public function verify_identity( $user_id, $identity_id ) {
+			return $this->run( "users/$user_id/identities/$identity_id/verify", array(), 'PUT' );
+		}
+
+		public function request_verification( $user_id, $identity_id ) {
+			return $this->run( "users/$user_id/identities/$identity_id/request_verification", array(), 'PUT' );
+		}
+
+		public function delete_identity( $user_id, $identity_id ) {
+			return $this->run( "users/$user_id/identities/$identity_id", array(), 'DELETE' );
 		}
 
 		/* Custom agent roles */
@@ -1448,12 +1513,41 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		/* End users */
 
 		/* Groups */
+
+		/**
+		 * Can be paginated.
+		 *
+		 * @return [type] [description]
+		 */
 		public function list_groups() {
 			return $this->run( 'groups' );
 		}
 
+		public function show_assignable_groups() {
+			return $this->run( 'groups/assignable' );
+		}
+
 		public function show_group( $group_id ) {
 			return $this->run( "groups/$group_id" );
+		}
+
+		public function create_group( $group ) {
+			if ( ! isset( $group['group'] ) && isset( $group['name'] ) ) {
+				$group = array( 'group' => $group );
+			}
+			return $this->run( 'groups', $group, 'POST' );
+		}
+
+		public function update_group( $group_id, $group ) {
+			if ( ! isset( $group['group'] ) ) {
+				$group = array( 'group' => $group );
+			}
+
+			return $this->run( "groups/$group_id", $group, 'PUT' );
+		}
+
+		public function delete_group( $group_id ) {
+			return $this->run( "groups/$group_id", array(), 'DELETE' );
 		}
 
 		/* Group memberships */
@@ -1462,16 +1556,18 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 
 		/* Organizations */
 
-		public function list_organizations( $user_id = '', $page = 1 ) {
+		/**
+		 * Can be paginated.
+		 *
+		 * @param  string $user_id [description]
+		 * @return [type]          [description]
+		 */
+		public function list_organizations( $user_id = '' ) {
 			if ( '' !== $user_id ) {
 				return $this->run( "users/$user_id/organizations" );
 			}
 
-			return $this->run(
-				'organizations', array(
-					'page' => $page,
-				)
-			);
+			return $this->run( 'organizations' );
 		}
 
 		public function build_zendesk_organization( $name = '', $other = array() ) {
@@ -1527,25 +1623,13 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 
 		/* Organization Memberships */
 
-		public function list_organization_memberships( $organization_id = '', $user_id = '', $page = 1 ) {
+		public function list_organization_memberships( $organization_id = '', $user_id = '' ) {
 			if ( $organization_id === '' && $user_id === '' ) {
-				return $this->run(
-					'organization_memberships', array(
-						'page' => $page,
-					)
-				);
+				return $this->run( 'organization_memberships' );
 			} elseif ( $organization_id === '' ) {
-				return $this->run(
-					"users/$user_id/organization_memberships", array(
-						'page' => $page,
-					)
-				);
+				return $this->run( "users/$user_id/organization_memberships" );
 			} else {
-				return $this->run(
-					"organizations/$organization_id/organization_memberships", array(
-						'page' => $page,
-					)
-				);
+				return $this->run( "organizations/$organization_id/organization_memberships" );
 			}
 		}
 
@@ -1553,7 +1637,7 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		public function build_zendesk_organization_membership( $user_id, $org_id ) {
 			return array(
 				'organization_memberships' => array(
-					'user_id' => $user_id,
+					'user_id'         => $user_id,
 					'organization_id' => $org_id,
 				),
 			); // example
@@ -1597,9 +1681,23 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 
 		/* Ticket fields */
 
+		/**
+		 * Can be paginated.
+		 *
+		 * @return [type] [description]
+		 */
+		public function list_ticket_fields() {
+			return $this->run( 'ticket_fields' );
+		}
+
 		/* User fields */
 
-		public function list_user_fields(){
+		/**
+		 * Can be paginated.
+		 *
+		 * @return [type] [description]
+		 */
+		public function list_user_fields() {
 			return $this->run( 'user_fields' );
 		}
 

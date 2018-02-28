@@ -32,6 +32,12 @@ if ( ! class_exists( 'ZendeskAPIBase' ) ) {
 			$this->args['method'] = $method;
 			// Sets route.
 			$this->route = $route;
+
+			// Merge bodies.
+			if( isset( $this->args['body'] ) ){
+				$body = array_merge( $this->args['body'], $body );
+			}
+
 			// If method is get, then there is no body.
 			if ( 'GET' === $method ) {
 				$this->route = add_query_arg( array_filter( $body ), $route );
