@@ -51,6 +51,7 @@ if ( ! class_exists( 'ZendeskAPIBase' ) ) {
 			return $this;
 		}
 		protected function fetch() {
+			// pp( $this->base_uri . $this->route, $this->args );
 			$response = wp_remote_request( $this->base_uri . $this->route, $this->args );
 
 			// Retrieve status code and body.

@@ -230,47 +230,7 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		 * @return [type]                [description]
 		 */
 		protected function run( $route, $args = array(), $method = 'GET', $add_data_type = true ) {
-			// Caching happens here. ONLY if the request is a get, serialize the route + args.
-			if ( 'GET' === $method && ! $this->is_debug ) {
-				// I was thinking about building the request first then serializing it, but
-				// that build should be identical for identical inputs. Therefore:
-				//
-				// Right here, serialize the route and args, make a hash of each. Store to a
-				// custom table, search for the hash, along with a timeout (say, 60 seconds?).
-				$key = 'hostops_zendeskapi_' . $route . ( $add_data_type ? '.json' : '' ) . serialize( $args );
-
-				$result = get_transient( $key );
-
-				if ( false === $result ) {
-					$result = $this->build_request( $route . ( $add_data_type ? '.json' : '' ), $args, $method )->fetch();
-
-					$expiration = 60; // 30 minutes.
-
-					// Possible TODO: set longer expiration, depending on the route.
-					//
-					// Ie: more expensive or frequent calls could be cached longer, such as
-					// pinging the search API.
-					//
-					// OK lets think about this.
-					//
-					// Things that WON'T change very often unless modified (which again, not often).
-					// get_user
-					// list_groups
-					// memberships
-					//
-					// Other stuff I'm sure.
-					//
-					// But, eh. I guess 60 seconds is good enough for now.
-					//
-					// A big thing todo though, would be on certain functions clearing a transient.
-					//
-					// Heck I could get clever with this. Perhaps when updating a ticket delete
-					// its transient, and this would allow me to have a longer expiration date.
-					set_transient( $key, $result, $expiration );
-				}
-
-				return $result;
-			}
+			// K, screw caching.
 
 			return $this->build_request( $route . ( $add_data_type ? '.json' : '' ), $args, $method )->fetch();
 		}
@@ -383,8 +343,6 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 			if ( isset( $this->args['body']['sort_by'] ) && ! isset( $this->args['body']['sort_order'] ) ) {
 				$this->args['body']['sort_order'] = 'desc';
 			}
-
-			pp( $this->args['body'] );
 
 			return $this;
 		}
