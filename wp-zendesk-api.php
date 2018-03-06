@@ -313,10 +313,10 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		 * Example usage:
 		 *
 		 *    $hapi = new WpZendeskAPI( ... );
-		 *    $results = $hapi->p( 2, 30, array( 'sort_by' => 'updated_at') )->get_tasks();
+		 *    $results = $hapi->set_pagination( 30, 2, array( 'sort_by' => 'updated_at') )->get_tasks();
 		 *
 		 *    // Alternatively
-		 *    $hapi->set_pagination( 2, 30 );
+		 *    $hapi->set_pagination( 30, 2 );
 		 *    $results = $hapi->get_tasks();
 		 *
 		 * If 'sort_by' is set and 'sort_order' is not set, it will be automatically set to desc.
@@ -1429,21 +1429,26 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		/* User identities */
 
 		/**
-		 * Can be paginated.
+		 * Might support pagination? Not sure.
 		 *
 		 * @param  [type] $user_id [description]
 		 * @return [type]          [description]
 		 */
 		public function list_identities( $user_id ) {
-			return $this->run( "users/$user_id/identities" );
+			return $this->run( "users/$user_id/identities", $args );
 		}
 
 		public function show_identity( $user_id, $identity_id ) {
 			return $this->run( "users/$user_id/identities/$identity_id" );
 		}
 
-		public function create_identity( $user_id, $identity ) {
-			return $this->run( "users/$user_id/identities/$identity_id", $identity, 'POST' );
+		public function create_identity( $user_id, $type, $value, $verified = false ) {
+			$identity = array(
+				'type'     => $type,
+				'value'    => $value,
+				'verified' => $verified
+			);
+			return $this->run( "users/$user_id/identities/", $identity, 'POST' );
 		}
 
 		public function update_identity( $user_id, $identity_id, $identity ) {
