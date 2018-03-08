@@ -1435,7 +1435,7 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		 * @return [type]          [description]
 		 */
 		public function list_identities( $user_id ) {
-			return $this->run( "users/$user_id/identities", $args );
+			return $this->run( "users/$user_id/identities" );
 		}
 
 		public function show_identity( $user_id, $identity_id ) {
@@ -1443,12 +1443,19 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		}
 
 		public function create_identity( $user_id, $type, $value, $verified = false ) {
+			$valid_types = array( 'email', 'google', 'phone_number', 'agent_forwarding', 'twitter', 'facebook', 'sdk' );
+			if( ! in_array( $value, $valid_types ) ){
+				return new WP_Error( 'invalid-data', __( 'Unsupported Zendesk identity type.', 'wp-zendesk-api' ) );
+			}
+
 			$identity = array(
-				'type'     => $type,
-				'value'    => $value,
-				'verified' => $verified
+				'identity' => array(
+					'type'     => $type,
+					'value'    => $value,
+					'verified' => $verified
+				)
 			);
-			return $this->run( "users/$user_id/identities/", $identity, 'POST' );
+			return $this->run( "users/$user_id/identities", $identity, 'POST' );
 		}
 
 		public function update_identity( $user_id, $identity_id, $identity ) {
