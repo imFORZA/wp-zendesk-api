@@ -1444,7 +1444,7 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 
 		public function create_identity( $user_id, $type, $value, $verified = false ) {
 			$valid_types = array( 'email', 'google', 'phone_number', 'agent_forwarding', 'twitter', 'facebook', 'sdk' );
-			if( ! in_array( $value, $valid_types ) ){
+			if( ! in_array( $type, $valid_types ) ){
 				return new WP_Error( 'invalid-data', __( 'Unsupported Zendesk identity type.', 'wp-zendesk-api' ) );
 			}
 
