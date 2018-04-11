@@ -1526,6 +1526,10 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 
 		/* Organizations */
 
+		public function show_organization( $org_id ){
+			return $this->run( "organizations/$org_id" );
+		}
+
 		/**
 		 * Can be paginated.
 		 *
@@ -1551,7 +1555,7 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 
 			if ( ! empty( $other ) ) {
 				foreach ( $other as $key => $val ) {
-					$user['organization'][ $key ] = $val;
+					$org['organization'][ $key ] = $val;
 				}
 			}
 
@@ -1573,6 +1577,10 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 			}
 
 			return $this->run( 'organizations', $organization, 'POST' );
+		}
+
+		public function update_organization( $organization_id, $organization ) {
+			return $this->run( "organizations/$organization_id", $organization, 'PUT' );
 		}
 
 		public function delete_organization( $organization_id ) {
