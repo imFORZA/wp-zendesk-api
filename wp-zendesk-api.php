@@ -1612,7 +1612,7 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		}
 
 		// Maybe make this name shorter?
-		public function build_zendesk_organization_membership( $user_id, $org_id ) {
+		public function build_organization_membership( $org_id, $user_id ) {
 			return array(
 				'organization_memberships' => array(
 					'user_id'         => $user_id,
@@ -1621,8 +1621,34 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 			); // example
 		}
 
+		public function create_membership( $org_id, $user_id = null ){
+			if( is_array( $org_id ) ){
+				$args = $org_id;
+			}else{
+				$args = $this->build_organization_membership( $org_id, $user_id );
+			}
+
+			return $this->run( 'organization_memberships', $args, 'POST' );
+		}
+
 		public function create_many_memberships( $memberships ) {
 			return $this->run( 'organization_memberships/create_many', $memberships, 'POST' );
+		}
+
+		public function delete_membership( $membership_id ){
+			return $this->run( "organization_memberships/$membership_id", array(), 'DELETE' );
+		}
+
+		public function delete_many_memberships( $membership_ids ){
+			if( is_array( $membership_ids ) ){
+				$membership_ids = implode( ',', $membership_ids );
+			}
+
+			return $this->run( "organization_memberships/destroy_many.json?ids=$membership_ids", array(), 'DELETE', false );
+		}
+
+		public function set_membership_default( $user_id, $membership_id ){
+			return $this->run( "users/$user_id/organization_memberships/$membership_id/default", array(), 'PUT' );
 		}
 
 		/* Automations */
