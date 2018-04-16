@@ -1614,7 +1614,7 @@ if ( ! class_exists( 'WpZendeskAPI' ) ) {
 		// Maybe make this name shorter?
 		public function build_organization_membership( $org_id, $user_id ) {
 			return array(
-				'organization_memberships' => array(
+				'organization_membership' => array(
 					'user_id'         => $user_id,
 					'organization_id' => $org_id,
 				),
